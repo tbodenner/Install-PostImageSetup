@@ -1,0 +1,196 @@
+[
+  {
+    "type": "InstallExe",
+    "name": "StreemPrint",
+    "file": "Installers\\StreemPrint\\StreemPrint Setup 7.4.2.exe",
+    "args": "/S",
+    "mesg": "StreemPrint (No GUI)",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
+    "type": "InstallExe",
+    "name": "PS667",
+    "file": "Installers\\Ambir PS667 Drivers\\PS667_v3.1.0_setup.exe",
+    "args": "/S /v/qn",
+    "mesg": "Ambir PS667 Driver (No GUI)",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
+    "type": "InstallExe",
+    "name": "DS687",
+    "file": "Installers\\Ambir DS687 Drivers\\Ambir-DS687-v4.0.4.exe",
+    "args": "/silent",
+    "mesg": "Ambir DS687 Drivers (No GUI)",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
+    "type": "InstallExe",
+    "name": "BigFix Remote Control - Target",
+    "file": "Installers\\BigFix Target Installer\\trc_target_setup.exe",
+    "args": "/S /v/qn",
+    "mesg": "BigFix RC Target (No GUI)",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
+    "type": "InstallMsi",
+    "name": "LynxClient",
+    "file": "Installers\\Lynx\\LynxClient_v10.4.25.0.msi",
+    "args": "/passive HOSTNAME=vhapreapplynx PROFILE=PanicButton",
+    "mesg": "Lynx",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
+    "type": "InstallMsi",
+    "name": "DisplayLink Graphics",
+    "file": "Installers\\DisplayLink Graphics Driver\\Synaptics DisplayLink Graphics Driver 11.2 M0.msi",
+    "args": "/passive",
+    "mesg": "DisplayLink Drivers",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
+    "type": "InstallMsi",
+    "name": "Universal Print Driver",
+    "file": "Installers\\VA HP Universal Print Drivers\\PrintDriver.msi",
+    "args": "ALLUSERS=1 REBOOT=R /passive",
+    "mesg": "VA HP Universal Print Drivers",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
+    "type": "InstallMsi",
+    "name": "HP USB Universal Dock G2 Drivers",
+    "file": "Installers\\VA HP Dock Drivers\\HPUSBUniversalDockG2Drivers.msi",
+    "args": "ALLUSERS=1 REBOOT=R /qn",
+    "mesg": "VA HP USB Universal Dock G2 Drivers",
+    "ltop": "true",
+    "dtop": "false",
+    "schk": "false"
+  },
+  {
+    "type": "InstallMsi",
+    "name": "Micro Focus Reflection DLL for 2FA",
+    "file": "Installers\\VA Micro Focus Reflection DLL for 2FA\\MicroFocusReflectionDLL.msi",
+    "args": "ALLUSERS=1 REBOOT=R /passive",
+    "mesg": "VA Micro Focus Reflection DLL for 2FA",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
+    "type": "CopyFile",
+    "file": "Files\\StreemPrint\\global_properties.json",
+    "dest": "C:\\Program Files (x86)\\Streem Print\\props",
+    "mesg": "StreemPrint Config File",
+    "ltop": "true",
+    "dtop": "true"
+  },
+  {
+    "type": "CopyFile",
+    "file": "Files\\Icons\\Printers.lnk",
+    "dest": "Public\\Desktop",
+    "mesg": "Printer Shortcut",
+    "ltop": "true",
+    "dtop": "true"
+  },
+  {
+    "type": "CopyFile",
+    "file": "Files\\Icons\\gpupdate.lnk",
+    "dest": "Public\\Desktop",
+    "mesg": "gpupdate Shortcut",
+    "ltop": "true",
+    "dtop": "true"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "mesg": "Changing Desktop Monitor Sleep Time",
+    "ltop": "false",
+    "dtop": "true"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "mesg": "Changing Desktop Computer Sleep Time",
+    "ltop": "false",
+    "dtop": "true"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETACTIVE SCHEME_BALANCED",
+    "mesg": "Setting Power Scheme",
+    "ltop": "false",
+    "dtop": "true"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "mesg": "Changing Laptop Monitor Sleep Time AC",
+    "ltop": "true",
+    "dtop": "false"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "mesg": "Changing Laptop Computer Sleep Time AC",
+    "ltop": "true",
+    "dtop": "false"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "mesg": "Changing Laptop Monitor Sleep Time DC",
+    "ltop": "true",
+    "dtop": "false"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "mesg": "Changing Laptop Computer Sleep Time DC",
+    "ltop": "true",
+    "dtop": "false"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
+    "mesg": "Changing Laptop Power Settings AC",
+    "ltop": "true",
+    "dtop": "false"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
+    "mesg": "Changing Laptop Power Settings DC",
+    "ltop": "true",
+    "dtop": "false"
+  },
+  {
+    "type": "RunCommand",
+    "file": "PowercfgExe",
+    "args": "/SETACTIVE SCHEME_BALANCED",
+    "mesg": "Setting Power Scheme",
+    "ltop": "true",
+    "dtop": "false"
+  }
+]

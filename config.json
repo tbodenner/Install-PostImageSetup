@@ -1,0 +1,16 @@
+{
+  "MapDriveLetter": "V",
+  "MapDriveFolder": "\\\\VHAPREFPC4\\E\\1.Desktop Icon\\",
+  "InstallFolder": "ScriptInstalls\\",
+  "TempFolder": "C:\\Temp",
+  "SystemFolder": "C:\\Windows\\System32",
+  "JsonFileName": "installs.json",
+  "DellAssetExePath": "Tools\\AssetTag\\Dell\\cctk.exe",
+  "HpAssetExePath": "Tools\\AssetTag\\HP\\BiosConfigUtility64.exe",
+  "LenovoAssetExePath": "Tools\\AssetTag\\Lenovo\\WinAIA64.exe",
+  "LenovoModel21H2": "21H2S5AJ00",
+  "LenovoModel21H2JsonFileName": "Lenovo21H2-21H2S5AJ00-installs.json",
+  "LenovoModel21H2BiosTargetVersion": "1.28",
+  "RSATFolderPath": "Tools\\RSAT\\",
+  "RSATFileName": "WindowsTH-KB2693643-x64.msu"
+}
