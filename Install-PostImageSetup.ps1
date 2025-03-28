@@ -781,11 +781,11 @@ function Add-RegistryKey {
 # add registry value to stop downloading manufacturers' apps for installed devices
 function Set-DisableAppsForDevices {
 	# the registry values
-	#$RegPath = 'HKLM:\Software\Policies\Microsoft\Windows\DeviceInstall'
-	#$RegKeyName = 'AllowOSManagedDriverInstallationToUI'
-	#$RegKeyValue = 0
+	$RegPath = 'HKCU:\Software\Policies\Microsoft\Windows\DeviceInstall'
+	$RegKeyName = 'AllowOSManagedDriverInstallationToUI'
+	$RegKeyValue = 0
 	# add the key
-	#Add-RegistryKey -Path $RegPath -Name $RegKeyName -Value $RegKeyValue -KeyType DWord
+	Add-RegistryKey -Path $RegPath -Name $RegKeyName -Value $RegKeyValue -KeyType DWord
 
 	# the registry values
 	$RegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Device Installer'
