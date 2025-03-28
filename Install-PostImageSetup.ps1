@@ -785,14 +785,14 @@ function Set-DisableAppsForDevices {
 	$RegKeyName = 'AllowOSManagedDriverInstallationToUI'
 	$RegKeyValue = 0
 	# add the key
-	Add-RegistryKey -Path $RegPath -Name $RegKeyName -Value $RegKeyValue -KeyType DWord
+	Add-RegistryKey -Path $RegPath -KeyName $RegKeyName -Value $RegKeyValue -KeyType DWord
 
 	# the registry values
 	$RegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Device Installer'
 	$RegKeyName = 'DisableCoInstallers'
 	$RegKeyValue = 1
 	# add the key
-	Add-RegistryKey -Path $RegPath -Name $RegKeyName -Value $RegKeyValue -KeyType DWord
+	Add-RegistryKey -Path $RegPath -KeyName $RegKeyName -Value $RegKeyValue -KeyType DWord
 }
 
 # reboot the computer
