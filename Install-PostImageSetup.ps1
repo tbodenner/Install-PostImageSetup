@@ -759,19 +759,40 @@ function Get-AssetTag {
 	return $Number
 }
 
+# add or update a value in the registry
+function Add-RegistryKey {
+	param (
+		[string]$Path,
+		[string]$KeyName,
+		[Microsoft.Win32.RegistryValueKind]$KeyType,
+		$Value
+	)
+	
+	# check if path exists
+	if ((Test-Path -Path $Path -Type Container) -eq $False) {
+		# if the path is missing, then create it
+		New-Item -Path $Path | Out-Null
+	}
+
+	# create the key if missing and set the value
+	Set-ItemProperty -Path $Path -Name $KeyName -Value $Value -Type $KeyType | Out-Null
+}
+
 # add registry value to stop downloading manufacturers' apps for installed devices
 function Set-DisableAppsForDevices {
 	# the registry values
-	$RegPath = 'HKCU:\Software\Policies\Microsoft\Windows\DeviceInstall'
-	$RegKeyName = 'AllowOSManagedDriverInstallationToUI'
-	$RegKeyValue = 0
-	# check if path exists
-	if ((Test-Path -Path $RegPath -Type Container) -eq $False) {
-		# if the path is missing, then create it
-		New-Item -Path $RegPath | Out-Null
-	}
-	# set the registry value and create the key if missing
-	Set-ItemProperty -Path $RegPath -Name $RegKeyName -Value $RegKeyValue | Out-Null
+	#$RegPath = 'HKLM:\Software\Policies\Microsoft\Windows\DeviceInstall'
+	#$RegKeyName = 'AllowOSManagedDriverInstallationToUI'
+	#$RegKeyValue = 0
+	# add the key
+	#Add-RegistryKey -Path $RegPath -Name $RegKeyName -Value $RegKeyValue -KeyType DWord
+
+	# the registry values
+	$RegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Device Installer'
+	$RegKeyName = 'DisableCoInstallers'
+	$RegKeyValue = 1
+	# add the key
+	Add-RegistryKey -Path $RegPath -Name $RegKeyName -Value $RegKeyValue -KeyType DWord
 }
 
 # reboot the computer
