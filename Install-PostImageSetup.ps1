@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.2.2'
+$Version = '1.2.3'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -71,6 +71,8 @@ $ScriptName = 'Install-PostImageSetup'
 	1.2.2:
 		Fixed RSAT uninstall command
 		Updated config.json path to use script root path
+	1.2.3:
+		Fixed an error with gpresult writing to null instead of nul
 #>
 
 # ------------------------------------------------------- #
@@ -173,7 +175,7 @@ function Invoke-Process {
 	$Parameters = @{
 		FilePath = $Executable
 		ArgumentList = $Arguments
-		RedirectStandardOutput = '.\NUL'
+		RedirectStandardOutput = 'NUL'
 	}
 	# check if we want the result returned
 	if ($ReturnExitCode -eq $True) {
@@ -656,7 +658,7 @@ function Install-WorkItem {
 # get the active directory organizational unit of this computer
 function Get-ComputerOU {
 	# get the gpresult data
-	$ComputerOU = & $Executables['GpresultExe'] /r /scope computer 2>null
+	$ComputerOU = & $Executables['GpresultExe'] /r /scope computer 2>nul
 	# get our distinguished name from the data
 	$ComputerOU = [string]($ComputerOU | Select-String "CN=")
 	# if the object is null
