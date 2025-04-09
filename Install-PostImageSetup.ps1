@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.2.3'
+$Version = '1.2.4'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -73,6 +73,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Updated config.json path to use script root path
 	1.2.3:
 		Fixed an error with gpresult writing to null instead of nul
+	1.2.4:
+		Enabled PowerShell 7 remoting
 #>
 
 # ------------------------------------------------------- #
@@ -1209,6 +1211,10 @@ $ProgressTotal = $WorkArray.Count
 
 # install each exe in our array
 $WorkArray.ForEach({ Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 500 })
+
+# enabling powershell remote for powershell verion 7
+Update-Progress -Status "Enabling PowerShell v7 Remoting" -Echo $True
+Enable-PSRemoting -Force
 
 # run gpupdate
 Update-Progress -Status "Running GP Update" -Echo $True
