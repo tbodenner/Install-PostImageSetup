@@ -1214,7 +1214,7 @@ $WorkArray.ForEach({ Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 
 
 # enabling powershell remote for powershell verion 7
 Update-Progress -Status "Enabling PowerShell v7 Remoting" -Echo $True
-Enable-PSRemoting -Force
+Enable-PSRemoting -Force | Out-Null
 
 # run gpupdate
 Update-Progress -Status "Running GP Update" -Echo $True
