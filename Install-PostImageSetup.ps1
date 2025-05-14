@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.2.4'
+$Version = '1.2.5'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -75,6 +75,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Fixed an error with gpresult writing to null instead of nul
 	1.2.4:
 		Enabled PowerShell 7 remoting
+	1.2.5:
+		Updated Cisco VPN software name
 #>
 
 # ------------------------------------------------------- #
@@ -1222,7 +1224,7 @@ Update-Progress -Status "Running GP Update" -Echo $True
 Update-Progress -Status "GP Update Finished" -Echo $True
 
 # anyconnect software name
-$AnyConnect = 'Cisco AnyConnect Secure Mobility Client'
+$AnyConnect = 'Cisco Secure Client - AnyConnect VPN'
 # check if this is a laptop and if anyconnect is installed
 if (($ComputerType -eq 2) -and ((Test-IsInstalled -Name $AnyConnect) -eq $False)) {
 	# if this is a laptop and the software is not found, alert the user
