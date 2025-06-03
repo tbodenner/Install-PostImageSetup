@@ -1135,27 +1135,35 @@ if (Test-IsStagingOU -eq $True) {
 	$RSATInstallArg = "$($RSATInstallerPath) /quiet /norestart"
 	Invoke-Process -Executable $Executables['WusaExe'] -Arguments $RSATInstallArg
 
-	# check if the command we need was installed
+	# check if the PowerShell command we need was installed
 	if ($Null -ne (Get-Command -Name 'Get-ADComputer' -ErrorAction SilentlyContinue)) {
 		# get our domain servers
-		$LocalDomainServer = Get-ADDomainController -Discover
-		$VaGovDomainServer = Get-ADDomainController -Discover -DomainName 'va.gov'
+		$DomainServer = Get-ADDomainController -Discover
+		$DomainName = $DomainServer.Domain
 
 		# where we found the computer object
-		$FoundComputerInVaGov = $false
+		$FoundComputerInVaGov = $DomainName -eq 'va.gov'
 
-		# distinguished name of the computer if in the local staging OU
-		$LocalStagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Test Lab,DC=v18,DC=med,DC=va,DC=gov"
-		# distinguished name of the computer if in the va.gov staging OU
-		$VaGovStagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
+		# our staging name will be used to find our imaged computer
+		$StagingName = $null
+
+		# check for va.gov or local
+		if ($FoundComputerInVaGov -eq $true) {
+			# distinguished name of the computer if in the va.gov staging OU
+			$StagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
+		}
+		else {
+			# distinguished name of the computer if in the local staging OU
+			$StagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Test Lab,DC=v18,DC=med,DC=va,DC=gov"
+		}
 
 		# get the computer object from AD
-		$ComputerObject = Get-ADComputer -Identity $ComputerName -Server $LocalDomainServer
+		$ComputerObject = Get-ADComputer -Identity $ComputerName -Server $DomainServer
 
 		# check if we got a computer object
 		if ($null -eq $ComputerObject) {
 			# get the computer object from the va.gov server
-			$ComputerObject = Get-ADComputer -Identity $ComputerName -Server $VaGovDomainServer
+			$ComputerObject = Get-ADComputer -Identity $ComputerName -Server $DomainServer
 			# update our boolean
 			$FoundComputerInVaGov = $true
 		}
@@ -1164,7 +1172,7 @@ if (Test-IsStagingOU -eq $True) {
 		$ComputerDistinguishedName = $ComputerObject.DistinguishedName
 
 		# check, again, if the computer is still in the staging OU
-		if (($ComputerDistinguishedName -eq $LocalStagingName) -or ($ComputerDistinguishedName -eq $VaGovStagingName)) {
+		if ($ComputerDistinguishedName -eq $StagingName) {
 			# get the computer's object guid
 			$ComputerGUID = $ComputerObject.ObjectGUID
 
@@ -1175,7 +1183,6 @@ if (Test-IsStagingOU -eq $True) {
 				if ($FoundComputerInVaGov -eq $true) {
 					# set our OU to the va.gov workstations OU
 					$TargetOU = "OU=Workstations,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
-					
 				}
 				else {
 					# set our OU to the local workstations OU
@@ -1199,7 +1206,7 @@ if (Test-IsStagingOU -eq $True) {
 			if ($Null -ne $TargetOU) {
 				try {
 					# move the computer to the correct OU
-					Move-ADObject -Identity $ComputerGUID -TargetPath $TargetOU
+					Move-ADObject -Identity $ComputerGUID -TargetPath $TargetOU -Server $DomainServer
 					Write-Host "Moved computer '$($ComputerName)' to '$($TargetOU)'." -ForegroundColor Green
 				}
 				catch {
