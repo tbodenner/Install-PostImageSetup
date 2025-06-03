@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.2.5'
+$Version = '1.2.6'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -50,7 +50,7 @@ $ScriptName = 'Install-PostImageSetup'
 	1.1.4:
 		If an install fails, then the install will be retried
 		Changed cmd.exe commands into Start-Process commands
-		Added registry value to possibly disable manufactureer app installs for devices (AMD Software)
+		Added registry value to possibly disable manufacturer app installs for devices (AMD Software)
 	1.1.5:
 		Updated Lynx installer to new version
 	1.1.6:
@@ -77,6 +77,9 @@ $ScriptName = 'Install-PostImageSetup'
 		Enabled PowerShell 7 remoting
 	1.2.5:
 		Updated Cisco VPN software name
+	1.2.6:
+		Removed PSRemote version 7 update
+		Updated the OSD Staging check to include the va.gov domain
 #>
 
 # ------------------------------------------------------- #
@@ -264,7 +267,7 @@ function Get-WorkItemsFromJson {
 				$DestinationPath = $Element.dest
 				# if the destination is the computer's public desktop
 				if ($DestinationPath -eq "Public\Desktop") {
-					# then update our path using the enviroment's path
+					# then update our path using the environment's path
 					$DestinationPath = "$($env:PUBLIC)\Desktop"
 				}
 				# create the work item and add it to our array
@@ -429,11 +432,11 @@ function Update-Progress {
 		# update progress bar
 		Write-Progress -Activity $ProgressActivity -Status " $($Status)" -PercentComplete $PComplete
 	}
-	# echo to host if our paramter is set
+	# echo to host if our parameter is set
 	if ($Echo -eq $True) {
 		Write-Host $Status -ForegroundColor $Color
 	}
-	# sleep for a small amountof time to allow the update to be shown on screen
+	# sleep for a small amount of time to allow the update to be shown on screen
 	Start-Sleep -Milliseconds 500
 }
 
@@ -563,11 +566,11 @@ function Install-WorkItem {
 				# is this an exe or a msi file
 				switch (Split-Path -Path $Installer.File -Extension) {
 					'.exe' {
-						# run the installer silently or passivly
+						# run the installer silently or passively
 						Install-Exe -Exe $Installer.File -EArg $Installer.IArg
 					}
 					'.msi' {
-						# run the installer silently or passivly
+						# run the installer silently or passively
 						Install-Msi -Msi $Installer.File -MArg $Installer.IArg
 					}
 					Default {
@@ -670,11 +673,11 @@ function Get-ComputerOU {
 		# return an empty array
 		return @()
 	}
-	# trim any whitspace, and split the string before returning the result
+	# trim any whitespace, and split the string before returning the result
 	return $ComputerOU.Trim() -Split ","
 }
 
-# check if this cmputer is in a specific organizational unit
+# check if this computer is in a specific organizational unit
 function Test-IsStagingOU {
 	# the group we are looking for
 	$StagingGroup = 'OU=OSD Staging'
@@ -1099,7 +1102,7 @@ else {
 	}
 }
 
-# check if we need to updatge our tag
+# check if we need to update our tag
 if ($UpdateTag -eq $False) {
 	# asset tag already set
 	Write-Host "BIOS Asset Tag Found" -ForegroundColor Cyan
@@ -1132,30 +1135,64 @@ if (Test-IsStagingOU -eq $True) {
 	$RSATInstallArg = "$($RSATInstallerPath) /quiet /norestart"
 	Invoke-Process -Executable $Executables['WusaExe'] -Arguments $RSATInstallArg
 
-	# distinguished name of the computer if in the staging OU
-	$StagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Test Lab,DC=v18,DC=med,DC=va,DC=gov"
 	# check if the command we need was installed
 	if ($Null -ne (Get-Command -Name 'Get-ADComputer' -ErrorAction SilentlyContinue)) {
+		# get our domain servers
+		$LocalDomainServer = Get-ADDomainController -Discover
+		$VaGovDomainServer = Get-ADDomainController -Discover -DomainName 'va.gov'
+
+		# where we found the computer object
+		$FoundComputerInVaGov = $false
+
+		# distinguished name of the computer if in the local staging OU
+		$LocalStagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Test Lab,DC=v18,DC=med,DC=va,DC=gov"
+		# distinguished name of the computer if in the va.gov staging OU
+		$VaGovStagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
+
 		# get the computer object from AD
-		$ComputerObject = Get-ADComputer -Identity $ComputerName
+		$ComputerObject = Get-ADComputer -Identity $ComputerName -Server $LocalDomainServer
+
+		# check if we got a computer object
+		if ($null -eq $ComputerObject) {
+			# get the computer object from the va.gov server
+			$ComputerObject = Get-ADComputer -Identity $ComputerName -Server $VaGovDomainServer
+			# update our boolean
+			$FoundComputerInVaGov = $true
+		}
+
 		# get the computer's distinguished name
 		$ComputerDistinguishedName = $ComputerObject.DistinguishedName
 
 		# check, again, if the computer is still in the staging OU
-		if ($ComputerDistinguishedName -eq $StagingName) {
+		if (($ComputerDistinguishedName -eq $LocalStagingName) -or ($ComputerDistinguishedName -eq $VaGovStagingName)) {
 			# get the computer's object guid
 			$ComputerGUID = $ComputerObject.ObjectGUID
 
 			$TargetOU = $Null
 			# check if this computer is a desktop
 			if ($ComputerType -eq 1) {
-				# set our OU to the workstations OU
-				$TargetOU = "OU=Workstations,OU=Prescott (PRE),OU=VISN18,DC=v18,DC=med,DC=va,DC=gov"
+				# check for va.gov or local
+				if ($FoundComputerInVaGov -eq $true) {
+					# set our OU to the va.gov workstations OU
+					$TargetOU = "OU=Workstations,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
+					
+				}
+				else {
+					# set our OU to the local workstations OU
+					$TargetOU = "OU=Workstations,OU=Prescott (PRE),OU=VISN18,DC=v18,DC=med,DC=va,DC=gov"
+				}
 			}
 			# check if this computer is a laptop
 			if ($ComputerType -eq 2) {
-				# set our OU to the laptops OU
-				$TargetOU = "OU=Laptops,OU=Prescott (PRE),OU=VISN18,DC=v18,DC=med,DC=va,DC=gov"
+				# check for va.gov or local
+				if ($FoundComputerInVaGov -eq $true) {
+					# set our OU to the va.gov laptops OU
+					$TargetOU = "OU=Laptops,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
+				}
+				else {
+					# set our OU to the local laptops OU
+					$TargetOU = "OU=Laptops,OU=Prescott (PRE),OU=VISN18,DC=v18,DC=med,DC=va,DC=gov"
+				}
 			}
 
 			# move the computer if we have an OU
@@ -1195,7 +1232,7 @@ if ($ComputerModel -eq $LenovoModel21H2) {
 	# get the bios major and minor version
 	$BiosMajor = (Get-CimInstance -ClassName Win32_BIOS).SystemBiosMajorVersion
 	$BiosMinor = (Get-CimInstance -ClassName Win32_BIOS).SystemBiosMinorVersion
-	# create a dot seperated version
+	# create a dot separated version
 	$BiosVersion = "$($BiosMajor).$($BiosMinor)"
 	# check if we have the correct bios version installed
 	if ($BiosVersion -eq $LenovoModel21H2BiosTargetVersion) {
@@ -1214,9 +1251,9 @@ $ProgressTotal = $WorkArray.Count
 # install each exe in our array
 $WorkArray.ForEach({ Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 500 })
 
-# enabling powershell remote for powershell verion 7
-Update-Progress -Status "Enabling PowerShell v7 Remoting" -Echo $True
-Enable-PSRemoting -Force -WarningAction SilentlyContinue -ErrorAction SilentlyContinue | Out-Null
+# enabling powershell remote for powershell version 7
+#Update-Progress -Status "Enabling PowerShell v7 Remoting" -Echo $True
+#Enable-PSRemoting -Force -WarningAction SilentlyContinue -ErrorAction SilentlyContinue | Out-Null
 
 # run gpupdate
 Update-Progress -Status "Running GP Update" -Echo $True
