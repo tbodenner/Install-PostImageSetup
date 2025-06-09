@@ -80,6 +80,7 @@ $ScriptName = 'Install-PostImageSetup'
 	1.2.6:
 		Removed PSRemote version 7 update
 		Updated the OSD Staging check to include the va.gov domain
+		Added changing BIOS settings
 #>
 
 # ------------------------------------------------------- #
@@ -174,9 +175,9 @@ class DeleteParameter : BaseParameter {
 function Invoke-Process {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$Executable,
-		[Parameter(Mandatory=$True)][string]$Arguments,
-		[bool]$ReturnExitCode = $False
+		[Parameter(Mandatory=$true)][string]$Executable,
+		[Parameter(Mandatory=$true)][string]$Arguments,
+		[bool]$ReturnExitCode = $false
 	)
 	# our start-process parameters
 	$Parameters = @{
@@ -185,7 +186,7 @@ function Invoke-Process {
 		RedirectStandardOutput = 'NUL'
 	}
 	# check if we want the result returned
-	if ($ReturnExitCode -eq $True) {
+	if ($ReturnExitCode -eq $true) {
 		# if true, start the command and return our results
 		$Process = Start-Process @Parameters -PassThru -Wait -NoNewWindow
 		return $Process.ExitCode
@@ -194,17 +195,17 @@ function Invoke-Process {
 		#Write-Host "Exe: $($Executable)" -ForegroundColor Magenta
 		# otherwise, run the command and return null
 		Start-Process @Parameters -Wait -NoNewWindow | Out-Null
-		return $Null
+		return $null
 	}
 }
 
 # get work items from json file
 function Get-WorkItemsFromJson {
 	param (
-		[Parameter(Mandatory=$True)][string]$JsonFilePath,
-		[Parameter(Mandatory=$True)][hashtable]$ExeHashtable,
-		[Parameter(Mandatory=$True)][string]$InstallRootPath,
-		[Parameter(Mandatory=$True)][string]$ComputerType
+		[Parameter(Mandatory=$true)][string]$JsonFilePath,
+		[Parameter(Mandatory=$true)][hashtable]$ExeHashtable,
+		[Parameter(Mandatory=$true)][string]$InstallRootPath,
+		[Parameter(Mandatory=$true)][string]$ComputerType
 	)
 
 	# try to read our data from the json file
@@ -214,7 +215,7 @@ function Get-WorkItemsFromJson {
 	catch {
 		# if we are unable to read the file, write an error message and return nothing
 		Write-Host "Unable to get JSON data from file $($JsonFilePath)."
-		return $Null
+		return $null
 	}
 
 	# our array that will store our work items
@@ -228,12 +229,12 @@ function Get-WorkItemsFromJson {
 			$LaptopBool = [System.Convert]::ToBoolean($Element.ltop)
 			$DesktopBool = [System.Convert]::ToBoolean($Element.dtop)
 			# if the computer is a laptop (2) and our bool is false
-			if (($ComputerType -eq 2) -and ($LaptopBool -eq $False)) {
+			if (($ComputerType -eq 2) -and ($LaptopBool -eq $false)) {
 				# then skip this item
 				continue
 			}
 			# if the computer is a desktop (1) and our bool is false
-			if (($ComputerType -eq 1) -and ($DesktopBool -eq $False)) {
+			if (($ComputerType -eq 1) -and ($DesktopBool -eq $false)) {
 				# then skip this item
 				continue
 			}
@@ -277,7 +278,7 @@ function Get-WorkItemsFromJson {
 				# get the path of our executable from our hashtable
 				$ExePath = $ExeHashtable[$Element.file]
 				# if we did not get a path
-				if ($Null -eq $ExePath) {
+				if ($null -eq $ExePath) {
 					# skip this item
 					Write-Host "JSON Error: Unknown executable '$($Element.file)'." -ForegroundColor Red
 					continue
@@ -310,7 +311,7 @@ function Get-TranscriptFile {
 	# stop count
 	$StopCount = 50
 	# stop the while loop if set to false
-	$LoopControl = $True
+	$LoopControl = $true
 	# look for the next filename to use
 	while ($LoopControl) {
 		# create our zero padded string
@@ -318,25 +319,25 @@ function Get-TranscriptFile {
 		# create our filename
 		$TestFile = "$($TranscriptFile)-$($PaddedFileCount)$($TranscriptExtension)"
 		# check if our filename exists
-		if ((Test-Path -Path $TestFile) -eq $False) {
+		if ((Test-Path -Path $TestFile) -eq $false) {
 			# current file is not found, use it
 			return $TestFile
 		}
 		# increase out file count
 		$FileCount++
 		# stop the loop
-		if ($FileCount -ge $StopCount) { $LoopControl = $False }
+		if ($FileCount -ge $StopCount) { $LoopControl = $false }
 	}
 	# file name not create, return null
-	return $Null
+	return $null
 }
 
 # install an executable
 function Install-Exe {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$Exe,
-		[Parameter(Mandatory=$True)][string]$EArg
+		[Parameter(Mandatory=$true)][string]$Exe,
+		[Parameter(Mandatory=$true)][string]$EArg
 	)
 	# run the installer
 	Invoke-Process -Executable $Exe -Arguments $EArg
@@ -346,8 +347,8 @@ function Install-Exe {
 function Install-Msi {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$Msi,
-		[Parameter(Mandatory=$True)][string]$MArg
+		[Parameter(Mandatory=$true)][string]$Msi,
+		[Parameter(Mandatory=$true)][string]$MArg
 	)
 	# run the installer
 	Invoke-Process -Executable $Executables['MsiexecExe'] -Arguments "/i `"$($Msi)`" $($MArg)"
@@ -357,7 +358,7 @@ function Install-Msi {
 function Install-Driver {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$FilePath
+		[Parameter(Mandatory=$true)][string]$FilePath
 	)
 	# install the driver using pnputil
 	& $Executables['PnpUtilExe'] /add-driver $FilePath /subdirs /install
@@ -367,8 +368,8 @@ function Install-Driver {
 function Copy-File {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$Path,
-		[Parameter(Mandatory=$True)][string]$Destination
+		[Parameter(Mandatory=$true)][string]$Path,
+		[Parameter(Mandatory=$true)][string]$Destination
 	)
 	# try to the copy the file
 	try {
@@ -385,7 +386,7 @@ function Copy-File {
 function Remove-File {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$Path
+		[Parameter(Mandatory=$true)][string]$Path
 	)
 	# try to the remove the file or folder
 	try {
@@ -401,12 +402,12 @@ function Remove-File {
 function Update-Progress {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$Status,
-		[bool]$Echo = $False,
+		[Parameter(Mandatory=$true)][string]$Status,
+		[bool]$Echo = $false,
 		[ConsoleColor]$Color
 	)
 	# if our color is empty
-	if ($Null -eq $Color) {
+	if ($null -eq $Color) {
 		# then set it
 		$Color = [System.ConsoleColor]::White
 	}
@@ -433,7 +434,7 @@ function Update-Progress {
 		Write-Progress -Activity $ProgressActivity -Status " $($Status)" -PercentComplete $PComplete
 	}
 	# echo to host if our parameter is set
-	if ($Echo -eq $True) {
+	if ($Echo -eq $true) {
 		Write-Host $Status -ForegroundColor $Color
 	}
 	# sleep for a small amount of time to allow the update to be shown on screen
@@ -444,7 +445,7 @@ function Update-Progress {
 function Test-IsInstalled {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$Name
+		[Parameter(Mandatory=$true)][string]$Name
 	)
 	# x86
 	$Path32 = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
@@ -457,60 +458,60 @@ function Test-IsInstalled {
 	# look for our software in our software list
 	$Version = ($Software | Where-Object { $_.DisplayName -like $CompareName }).DisplayVersion
 	# if the software is not found then IsInstalled is false
-	if ($Null -eq $Version) {
-		return $False
+	if ($null -eq $Version) {
+		return $false
 	}
 	# return true for all other cases
-	return $True
+	return $true
 }
 
 # check by name if our driver is found by pnputil /enum-drivers
 function Test-IsPnpUtilDriverInstalled {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)]$Drivers,
-		[Parameter(Mandatory=$True)][string]$Name
+		[Parameter(Mandatory=$true)]$Drivers,
+		[Parameter(Mandatory=$true)][string]$Name
 	)
 	# create our compare string
 	$DriverName = "*$($Name)*"
 	# look for our driver in our driver list
 	$FoundDriver = $Drivers | Where-Object { if ($_ -like $DriverName ) { $_ } }
 	# if the driver is not found then IsPnpUtilDriverInstalled is false
-	if ($Null -eq $FoundDriver) {
-		return $False
+	if ($null -eq $FoundDriver) {
+		return $false
 	}
 	# return true for all other cases
-	return $True
+	return $true
 }
 
 # check by name if our driver is found in our signed driver list
 function Test-IsSignedDriverInstalled {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)]$Drivers,
-		[Parameter(Mandatory=$True)][string]$Name
+		[Parameter(Mandatory=$true)]$Drivers,
+		[Parameter(Mandatory=$true)][string]$Name
 	)
 	# create our compare string
 	$DriverName = "$($Name)*"
 	# look for our driver in our driver list
 	$FoundDriver = ($Drivers | Where-Object { $_.DeviceID -like $DriverName }).DeviceID
 	# if the driver is not found then IsSignedDriverInstalled is false
-	if ($Null -eq $FoundDriver) {
-		return $False
+	if ($null -eq $FoundDriver) {
+		return $false
 	}
 	# return true for all other cases
-	return $True
+	return $true
 }
 
 # install an item based on it's object type
 function Install-WorkItem {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][object]$WorkObject,
+		[Parameter(Mandatory=$true)][object]$WorkObject,
 		[int]$RetryCount = 0
 	)
 	# skip our item if it is null
-	if ($Null -eq $WorkObject) {
+	if ($null -eq $WorkObject) {
 		Write-Host '!! Error, Work object is null' -ForegroundColor Red
 		return
 	}
@@ -553,7 +554,7 @@ function Install-WorkItem {
 			# cast our work object into the correct object
 			$Installer = [InstallParameter]$WorkObject
 			# check if we should install this on the current computer type
-			if (($ComputerType -eq 1) -and ($Installer.LaptopOnly -eq $True)) {
+			if (($ComputerType -eq 1) -and ($Installer.LaptopOnly -eq $true)) {
 				Write-Host "-- '$($Installer.Name)' Skipped on Desktops" -ForegroundColor Magenta
 				return
 			}
@@ -562,7 +563,7 @@ function Install-WorkItem {
 			# check if the driver is installed
 			$IsDriverInstalled = Test-IsSignedDriverInstalled -Drivers $SignedDrivers -Name $Installer.Name
 			# install our item or skip it
-			if (($IsSoftwareInstalled -eq $False) -and ($IsDriverInstalled -eq $False)) {
+			if (($IsSoftwareInstalled -eq $false) -and ($IsDriverInstalled -eq $false)) {
 				# is this an exe or a msi file
 				switch (Split-Path -Path $Installer.File -Extension) {
 					'.exe' {
@@ -580,9 +581,9 @@ function Install-WorkItem {
 					}
 				}
 				# only check if the install worked if skip check if false
-				if ($Installer.SkipCheck -eq $False) {
+				if ($Installer.SkipCheck -eq $false) {
 					# check if the software is installed
-					if ((Test-IsInstalled -Name $Installer.Name) -eq $True) {
+					if ((Test-IsInstalled -Name $Installer.Name) -eq $true) {
 						# install was good
 						Write-Host "-- '$($Installer.Name)' Installed" -ForegroundColor Green
 					}
@@ -626,7 +627,7 @@ function Install-WorkItem {
 			# cast our work object into the correct object
 			$Driver = [DriverParameter]$WorkObject
 			# install the driver with pnputil
-			if ((Test-IsPnpUtilDriverInstalled -Drivers $PnpUtilDrivers -Name $Driver.Name) -eq $False) {
+			if ((Test-IsPnpUtilDriverInstalled -Drivers $PnpUtilDrivers -Name $Driver.Name) -eq $false) {
 				Install-Driver -FilePath $Driver.File
 			}
 			else {
@@ -669,7 +670,7 @@ function Get-ComputerOU {
 	# get our distinguished name from the data
 	$ComputerOU = [string]($ComputerOU | Select-String "CN=")
 	# if the object is null
-	if ($Null -eq $ComputerOU) {
+	if ($null -eq $ComputerOU) {
 		# return an empty array
 		return @()
 	}
@@ -686,11 +687,98 @@ function Test-IsStagingOU {
 	# check if the group is in our ou string
 	if ($OUnits -contains $StagingGroup) {
 		# if found, return true
-		return $True
+		return $true
 	}
 	else {
 		# otherwise, return false
-		return $False
+		return $false
+	}
+}
+
+# change a computer's bios settings
+function Update-BIOS {
+	param (
+		[Parameter(Mandatory=$true)][string]$Manufacturer,
+		[Parameter(Mandatory=$true)][string]$ComputerType
+	)
+
+	# we will create a command based on the computer manufacturer
+	$UpdateExe = $null
+	$UpdateArgs = $null
+
+	# check our computer type
+	if ($ComputerType -notin 1, 2) {
+		Write-Host "Update-BIOS: ComputerType: $($ComputerType) not found"
+		# do nothing
+		return $false
+	}
+
+	# set our command string based on our manufacturer and computer type
+	switch ($Manufacturer.ToUpper()) {
+		'DELL' {
+			# create the command to set our asset tag number
+			$UpdateExe = $Executables['DellAssetExe']
+			if ($ComputerType -eq 1) {
+				$UpdateArgs = "--infile $($BiosFilePaths["DellDesktopBios"])"
+			}
+			if ($ComputerType -eq 2) {
+				$UpdateArgs = "--infile $($BiosFilePaths["DellLaptopBios"])"
+			}
+		}
+		'HP' {
+			# create the command to set our asset tag number
+			$UpdateExe = $Executables['HpAssetExe']
+			if ($ComputerType -eq 1) {
+				$UpdateArgs = "/set:$($BiosFilePaths["HpDesktopBios"])"
+			}
+			if ($ComputerType -eq 2) {
+				$UpdateArgs = "/set:$($BiosFilePaths["HpLaptopBios"])"
+			}
+		}
+		'LENOVO' {
+			# create the command to set our asset tag number
+			$UpdateExe = $Executables['LenovoBiosHta']
+			if ($ComputerType -eq 1) {
+				$UpdateArgs = "'`"file=$($BiosFilePaths["LenovoDesktopBios"])`"'"
+			}
+			if ($ComputerType -eq 2) {
+				$UpdateArgs = "'`"file=$($BiosFilePaths["LenovoLaptopBios"])`"'"
+			}
+		}
+		Default {
+			# computer manufacturer not found
+			Write-Host "Update-BIOS: Manufacturer: $($Manufacturer) not found"
+			# do nothing
+			return $false
+		}
+	}
+
+	# check if either of our command strings are null
+	if (($null -eq $UpdateExe) -or ($null -eq $UpdateArgs)) {
+		# one of our strings is null
+		Write-Host "Update-BIOS: UpdateExe or UpdateArgs is null"
+		# do nothing
+		return $false
+	}
+
+	# run the command
+	$ReturnCode = Invoke-Process -Executable $UpdateExe -Arguments $UpdateArgs -ReturnExitCode $true
+	Write-Host "Update-BIOS: UpdateExe: $($UpdateExe)"
+	Write-Host "Update-BIOS: UpdateArgs: $($UpdateArgs)"
+	Write-Host "Update-BIOS: ReturnCode: $($ReturnCode)"
+	if ($null -ne $ReturnCode) {
+		if ($ReturnCode -eq 0) {
+			# bios update program exited without errors
+			return $true
+		}
+		else {
+			# bios update program exited with errors
+			return $false
+		}
+	}
+	else {
+		# return code was null
+		return $false
 	}
 }
 
@@ -698,12 +786,12 @@ function Test-IsStagingOU {
 function Update-AssetTag {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][int]$AssetNumber,
-		[Parameter(Mandatory=$True)][string]$Manufacturer
+		[Parameter(Mandatory=$true)][int]$AssetNumber,
+		[Parameter(Mandatory=$true)][string]$Manufacturer
 	)
 	# we will create a command based on the computer manufacturer
-	$AssetExe = $Null
-	$AssetArg = $Null
+	$AssetExe = $null
+	$AssetArg = $null
 
 	# set our command string based on our manufacturer
 	switch ($Manufacturer.ToUpper()) {
@@ -725,44 +813,44 @@ function Update-AssetTag {
 		Default {
 			# computer manufacturer not found
 			Write-Host "Update-AssetTag: $($Manufacturer) not found"
-			return $False
+			return $false
 		}
 	}
 	# if our argument string is null or empty, return
-	if (($Null -eq $AssetArg) -or ($AssetArg -eq "")) {
-		return $False
+	if (($null -eq $AssetArg) -or ($AssetArg -eq "")) {
+		return $false
 	}
 	# run the command
 	Invoke-Process -Executable $AssetExe -Arguments $AssetArg
 	# return true if we ran our command
-	return $True
+	return $true
 }
 
 # get our asset number from our computer name
 function Get-AssetTag {
 	# parameters
 	param (
-		[Parameter(Mandatory=$True)][string]$Name
+		[Parameter(Mandatory=$true)][string]$Name
 	)
 	# get the asset number from our computer name
 	# match five digits at the end of the line
 	$Found = $Name -match '[0-9]{5}$'
 	# check if we have a match
-	if ($Found -eq $False) {
+	if ($Found -eq $false) {
 		# return null if not found
-		return $Null
+		return $null
 	}
 	# get the first match
 	$Number = $matches[0]
 	# check if our asset tag is empty
 	if ($Number -eq "") {
 		# return null if our number is empty
-		return $Null
+		return $null
 	}
 	# check if our asset tag is the correct length
 	if ($Number.Length -ne $AssetTagLength) {
 		# return null if not the correct length
-		return $Null
+		return $null
 	}
 	# return our asset number
 	return $Number
@@ -778,7 +866,7 @@ function Add-RegistryKey {
 	)
 	
 	# check if path exists
-	if ((Test-Path -Path $Path -Type Container) -eq $False) {
+	if ((Test-Path -Path $Path -Type Container) -eq $false) {
 		# if the path is missing, then create it
 		New-Item -Path $Path | Out-Null
 	}
@@ -808,34 +896,34 @@ function Set-DisableAppsForDevices {
 function Start-ComputerRestart {
 	param (
 		[int]$TimeOut = 60,
-		[bool]$Firmware = $False,
-		[bool]$Abort = $False
+		[bool]$Firmware = $false,
+		[bool]$Abort = $false
 	)
 	$ShutdownExe = 'C:\Windows\System32\shutdown.exe'
 	$RebootMessage = "Rebooting in $($RebootTimeout) seconds"
 	$RebootArg = "/r /f /t $($RebootTimeout) /c `"$($RebootMessage)`""
 	# abort a reboot
-	if ($Abort -eq $True) {
+	if ($Abort -eq $true) {
 		$RebootMessage = "Aborting reboot"
 		$RebootArg = '/a'
 	}
 	# reboot to firmware with a timeout
-	elseif (($Firmware -eq $True) -and ($TimeOut -gt 0)) {
+	elseif (($Firmware -eq $true) -and ($TimeOut -gt 0)) {
 		$RebootMessage = "Rebooting to Firmware (BIOS/UEFI) in $($TimeOut) seconds"
 		$RebootArg = "/r /f /fw /t $($TimeOut) /c `"$($RebootMessage)`""
 	}
 	# immediately reboot to firmware
-	elseif (($Firmware -eq $True) -and ($TimeOut -le 0)) {
+	elseif (($Firmware -eq $true) -and ($TimeOut -le 0)) {
 		$RebootMessage = 'Rebooting to Firmware (BIOS/UEFI) now'
 		$RebootArg = "/r /f /fw /t 0 /c `"$($RebootMessage)`""
 	}
 	# reboot normally with a timeout
-	elseif (($Firmware -eq $False) -and ($TimeOut -gt 0)) {
+	elseif (($Firmware -eq $false) -and ($TimeOut -gt 0)) {
 		$RebootMessage = "Rebooting in $($TimeOut) seconds"
 		$RebootArg = "/r /f /t $($TimeOut) /c `"$($RebootMessage)`""
 	}
 	# immediately reboot normally
-	elseif (($Firmware -eq $False) -and ($TimeOut -le 0)) {
+	elseif (($Firmware -eq $false) -and ($TimeOut -le 0)) {
 		$RebootMessage = 'Rebooting now'
 		$RebootArg = "/r /f /t 0 /c `"$($RebootMessage)`""
 	}
@@ -844,7 +932,7 @@ function Start-ComputerRestart {
 		Write-Host 'Start-ComputerRestart: Invalid reboot arguments' -ForegroundColor Red
 	}
 	# run the reboot command
-	$ReturnCode = Invoke-Process -Executable $ShutdownExe -Arguments $RebootArg -ReturnExitCode $True
+	$ReturnCode = Invoke-Process -Executable $ShutdownExe -Arguments $RebootArg -ReturnExitCode $true
 	if ($ReturnCode -eq 203) {
 		Write-Host "Error: 203 returned from shutdown.exe, trying again" -ForegroundColor Magenta
 		Start-ComputerRestart -TimeOut $TimeOut -Firmware $Firmware -Abort $Abort
@@ -854,14 +942,14 @@ function Start-ComputerRestart {
 # check if a config value is null
 function Test-ConfigValueNull {
 	param (
-		[Parameter(Mandatory=$True)][hashtable]$Hashtable,
-		[Parameter(Mandatory=$True)][string]$Key
+		[Parameter(Mandatory=$true)][hashtable]$Hashtable,
+		[Parameter(Mandatory=$true)][string]$Key
 	)
 	# get our value
 	$Value = $Hashtable[$Key]
 
 	# check if the value is null
-	if (($Null -eq $Value) -or ($Value -eq "")) {
+	if (($null -eq $Value) -or ($Value -eq "")) {
 		# if the value is null, write an error message and exit
 		Write-Host "ERROR: Config '$($Key)' value is null or empty." -ForegroundColor Red
 		exit
@@ -881,7 +969,7 @@ Write-Host "Initializing, please wait..." -ForegroundColor DarkGray
 $JsonConfigFileName = Join-Path -Path $PSScriptRoot -ChildPath 'config.json'
 
 # check if our config file exists
-if ((Test-Path -Path $JsonConfigFileName) -eq $False)
+if ((Test-Path -Path $JsonConfigFileName) -eq $false)
 {
 	# if we are unable to read the file, write an error message and exit
 	Write-Host "ERROR: JSON config file '$($JsonConfigFileName)' not found." -ForegroundColor Red
@@ -892,7 +980,7 @@ if ((Test-Path -Path $JsonConfigFileName) -eq $False)
 $JsonConfigHashtable = Get-Content $JsonConfigFileName | ConvertFrom-Json -AsHashtable
 
 # check if our hashtable is null
-if ($Null -eq $JsonConfigHashtable) {
+if ($null -eq $JsonConfigHashtable) {
 	# hashtable is null, exit
 	Write-Host "ERROR: No config data read from JSON file '$($JsonConfigFileName)'." -ForegroundColor Red
 	exit
@@ -918,6 +1006,15 @@ $JsonFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "JsonF
 $DellAssetExePath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "DellAssetExePath"
 $HpAssetExePath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "HpAssetExePath"
 $LenovoAssetExePath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoAssetExePath"
+
+# paths for our bios update files
+$DellDesktopBiosPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "DellDesktopBiosPath"
+$DellLaptopBiosPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "DellLaptopBiosPath"
+$HpDesktopBiosPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "HpDesktopBiosPath"
+$HpLaptopBiosPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "HpLaptopBiosPath"
+$LenovoBiosToolPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoBiosToolPath"
+$LenovoDesktopBiosPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoDesktopBiosPath"
+$LenovoLaptopBiosPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoLaptopBiosPath"
 
 # computer model to install the lenovo intel audio drivers and updated BIOS
 $LenovoModel21H2 = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoModel21H2"
@@ -956,6 +1053,17 @@ $Executables = @{
 	"DellAssetExe"	 = "$($MappedInstall)\$($DellAssetExePath)"
 	"HpAssetExe"	 = "$($MappedInstall)\$($HpAssetExePath)"
 	"LenovoAssetExe" = "$($MappedInstall)\$($LenovoAssetExePath)"
+	"LenovoBiosHta" = "$($MappedInstall)\$($LenovoBiosToolPath)"
+}
+
+# bios file path hashtable
+$BiosFilePaths = @{
+	"DellDesktopBios" = "$($MappedInstall)\$($DellDesktopBiosPath)"
+	"DellLaptopBios" = "$($MappedInstall)\$($DellLaptopBiosPath)"
+	"HpDesktopBios" = "$($MappedInstall)\$($HpDesktopBiosPath)"
+	"HpLaptopBios" = "$($MappedInstall)\$($HpLaptopBiosPath)"
+	"LenovoDesktopBios" = "$($MappedInstall)\$($LenovoDesktopBiosPath)"
+	"LenovoLaptopBios" = "$($MappedInstall)\$($LenovoLaptopBiosPath)"
 }
 
 # file to read the work item data from
@@ -1011,7 +1119,7 @@ Write-Host "| |   | | |  __/\__ \ (_| (_) | |_| |_  | |__| || |_   | |   " -Fore
 Write-Host "|_|   |_|  \___||___/\___\___/ \__|\__|  \____/_____|  |_|   " -ForegroundColor Blue
 
 # check if the temp directory exists
-if ((Test-Path -Path $TempFolder) -eq $False) {
+if ((Test-Path -Path $TempFolder) -eq $false) {
 	# if not found, create it
 	New-Item -Path $TempFolder -ItemType "directory" | Out-Null
 }
@@ -1019,7 +1127,7 @@ if ((Test-Path -Path $TempFolder) -eq $False) {
 # start the transcript
 $TranscriptFile = Get-TranscriptFile
 # check that we got a filename
-if ($Null -eq $TranscriptFile) {
+if ($null -eq $TranscriptFile) {
 	# write our error message
 	$EMsg = "Unable to create transcript file. Exiting."
 	Write-Error $EMsg
@@ -1035,7 +1143,7 @@ Start-Transcript -Path $TranscriptFile -NoClobber | Out-Null
 Write-Host "$($ScriptName) v$($Version)`n" -ForegroundColor DarkGray
 
 # map the drive for our script root
-Update-Progress -Status "Mapping Drive" -Echo $True
+Update-Progress -Status "Mapping Drive" -Echo $true
 New-PSDrive -Name $MapDriveLetter -Root $MapDriveFolder -Persist -PSProvider "FileSystem" -ErrorAction SilentlyContinue | Out-Null
 
 # change to our mapped drive
@@ -1055,7 +1163,7 @@ switch ($ComputerType) {
 }
 
 # check if the mapped drive exists
-if ((Test-Path -Path "$($MapDriveLetter):\") -eq $False) {
+if ((Test-Path -Path "$($MapDriveLetter):\") -eq $false) {
 	# clear the progress bar
 	Write-Progress -Completed -Status "Error"
 	# write an error
@@ -1070,10 +1178,10 @@ if ((Test-Path -Path "$($MapDriveLetter):\") -eq $False) {
 Set-DisableAppsForDevices
 
 # boolean to determine if we will update our asset tag
-$UpdateTag = $False
+$UpdateTag = $false
 
 # get our asset tag number from our computer name
-Update-Progress -Status "Getting BIOS Asset Tag" -Echo $True
+Update-Progress -Status "Getting BIOS Asset Tag" -Echo $true
 $AssetNumber = Get-AssetTag -Name $ComputerName
 # write our asset number
 Write-Host "EE: $($AssetNumber)" -ForegroundColor White
@@ -1081,40 +1189,40 @@ Write-Host "EE: $($AssetNumber)" -ForegroundColor White
 # if the asset tag is empty
 if ($ComputerAssetTag -eq "") {
 	# update our asset tag
-	$UpdateTag = $True
+	$UpdateTag = $true
 }
 else {
 	# check if our computer's asset tag is correct
-	if ($Null -eq $AssetNumber) {
+	if ($null -eq $AssetNumber) {
 		# if not found, update our asset tag
-		$UpdateTag = $True
+		$UpdateTag = $true
 	}
 	else {
 		# check if our asset tag matches what it should be
 		if ($AssetNumber -eq $ComputerAssetTag) {
 			# the tags match, don't update our tag
-			$UpdateTag = $False
+			$UpdateTag = $false
 		}
 		else {
 			# the tags don't match, update our tag
-			$UpdateTag = $True
+			$UpdateTag = $true
 		}
 	}
 }
 
 # check if we need to update our tag
-if ($UpdateTag -eq $False) {
+if ($UpdateTag -eq $false) {
 	# asset tag already set
 	Write-Host "BIOS Asset Tag Found" -ForegroundColor Cyan
 }
 else {
 	# set our asset tag if it is not null
-	if ($Null -ne $AssetNumber) {
+	if ($null -ne $AssetNumber) {
 		# set our asset number
-		Update-Progress -Status "Setting BIOS Asset Tag" -Echo $True
+		Update-Progress -Status "Setting BIOS Asset Tag" -Echo $true
 		$Result = Update-AssetTag -AssetNumber $AssetNumber -Manufacturer $ComputerManufacturer
 		# write the outcome of setting our asset tag
-		if ($Result -eq $True) {
+		if ($Result -eq $true) {
 			Write-Host "BIOS Asset Tag Set" -ForegroundColor Green
 		}
 		else {
@@ -1123,20 +1231,30 @@ else {
 	}
 }
 
+# update our bios settings
+Update-Progress -Status "Updating BIOS Settings" -Echo $true
+$BiosUpdateResult = Update-BIOS -Manufacturer $ComputerManufacturer -ComputerType $ComputerType
+if ($BiosUpdateResult -eq $true) {
+	Write-Host "BIOS Settings Updated" -ForegroundColor Green
+}
+else {
+	Write-Host "BIOS Settings NOT Updated" -ForegroundColor Red
+}
+
 # check if this computer is still in the staging group in active directory
-Update-Progress -Status "Checking Computer's OU" -Echo $True
-if (Test-IsStagingOU -eq $True) {
+Update-Progress -Status "Checking Computer's OU" -Echo $true
+if (Test-IsStagingOU -eq $true) {
 	# get our installer path
 	$RSATInstallerPath = Join-Path -Path $MappedInstall -ChildPath $RSATFolderPath -AdditionalChildPath $RSATFileName
 
 	Write-Host "Attempting to move computer in Active Directory" -ForegroundColor Yellow
-	Update-Progress -Status "Installing RSAT" -Echo $True
+	Update-Progress -Status "Installing RSAT" -Echo $true
 	# install the rsat tools
 	$RSATInstallArg = "$($RSATInstallerPath) /quiet /norestart"
 	Invoke-Process -Executable $Executables['WusaExe'] -Arguments $RSATInstallArg
 
 	# check if the PowerShell command we need was installed
-	if ($Null -ne (Get-Command -Name 'Get-ADComputer' -ErrorAction SilentlyContinue)) {
+	if ($null -ne (Get-Command -Name 'Get-ADComputer' -ErrorAction SilentlyContinue)) {
 		# get our domain servers
 		$DomainServer = Get-ADDomainController -Discover
 		$DomainName = $DomainServer.Domain
@@ -1176,7 +1294,7 @@ if (Test-IsStagingOU -eq $True) {
 			# get the computer's object guid
 			$ComputerGUID = $ComputerObject.ObjectGUID
 
-			$TargetOU = $Null
+			$TargetOU = $null
 			# check if this computer is a desktop
 			if ($ComputerType -eq 1) {
 				# check for va.gov or local
@@ -1203,7 +1321,7 @@ if (Test-IsStagingOU -eq $True) {
 			}
 
 			# move the computer if we have an OU
-			if ($Null -ne $TargetOU) {
+			if ($null -ne $TargetOU) {
 				try {
 					# move the computer to the correct OU
 					Move-ADObject -Identity $ComputerGUID -TargetPath $TargetOU -Server $DomainServer
@@ -1216,7 +1334,7 @@ if (Test-IsStagingOU -eq $True) {
 			}
 		}
 		# uninstall the rsat tools
-		Update-Progress -Status "Removing RSAT" -Echo $True
+		Update-Progress -Status "Removing RSAT" -Echo $true
 		$RSATUninstallArg = "$($RSATInstallerPath) /uninstall /quiet /norestart"
 		Invoke-Process -Executable $Executables['WusaExe'] -Arguments $RSATUninstallArg
 	}
@@ -1259,18 +1377,18 @@ $ProgressTotal = $WorkArray.Count
 $WorkArray.ForEach({ Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 500 })
 
 # enabling powershell remote for powershell version 7
-#Update-Progress -Status "Enabling PowerShell v7 Remoting" -Echo $True
+#Update-Progress -Status "Enabling PowerShell v7 Remoting" -Echo $true
 #Enable-PSRemoting -Force -WarningAction SilentlyContinue -ErrorAction SilentlyContinue | Out-Null
 
 # run gpupdate
-Update-Progress -Status "Running GP Update" -Echo $True
+Update-Progress -Status "Running GP Update" -Echo $true
 & $Executables['CmdExe'] /c "ECHO N | $($Executables['GpupdateExe']) /force /wait:180" | Out-Null
-Update-Progress -Status "GP Update Finished" -Echo $True
+Update-Progress -Status "GP Update Finished" -Echo $true
 
 # anyconnect software name
 $AnyConnect = 'Cisco Secure Client - AnyConnect VPN'
 # check if this is a laptop and if anyconnect is installed
-if (($ComputerType -eq 2) -and ((Test-IsInstalled -Name $AnyConnect) -eq $False)) {
+if (($ComputerType -eq 2) -and ((Test-IsInstalled -Name $AnyConnect) -eq $false)) {
 	# if this is a laptop and the software is not found, alert the user
 	Write-Host "************************************************************************************" -ForegroundColor Red
 	Write-Host "* Warning, '$($AnyConnect)' NOT installed on this laptop! *" -ForegroundColor Red
@@ -1281,11 +1399,11 @@ if (($ComputerType -eq 2) -and ((Test-IsInstalled -Name $AnyConnect) -eq $False)
 Set-Location $SystemFolder
 
 # remove our temp drive
-Update-Progress -Status "Removing Mapped Drive" -Echo $True
+Update-Progress -Status "Removing Mapped Drive" -Echo $true
 Remove-PSDrive -Name $MapDriveLetter -Force | Out-Null
 
 # installs done
-Update-Progress -Status "Done" -Echo $True
+Update-Progress -Status "Done" -Echo $true
 
 # stop the transcript
 Stop-Transcript | Out-Null
@@ -1293,7 +1411,7 @@ Stop-Transcript | Out-Null
 # check if secure boot is enabled
 [bool]$SecureBootEnabled = Confirm-SecureBootUEFI
 # check if the securebootenabled variable was assigned a value
-if ($Null -eq $SecureBootEnabled) {
+if ($null -eq $SecureBootEnabled) {
 	# if null, write a message and exit the script
 	Write-Host "!! Error, Unable to get Secure Boot status!" -ForegroundColor Red
 	exit
@@ -1302,46 +1420,46 @@ if ($Null -eq $SecureBootEnabled) {
 # reboot the computer
 if ($SecureBootEnabled) {
 	# if true, reboot the computer
-	Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $False
+	Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $false
 	Write-Host "Rebooting in $($RebootTimeout) seconds" -ForegroundColor Green
 }
 else {
 	# if false, reboot the computer to the firmware
-	Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $True
+	Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $true
 	Write-Host "Rebooting to Firmware (BIOS/UEFI) in $($RebootTimeout) seconds" -ForegroundColor Green
 }
 
 # ask the user if they want to stop the reboot
-$LoopControl = $True
+$LoopControl = $true
 while ($LoopControl) {
 	Write-Host "Reboot Commands:`nA: Abort Reboot`nN: Close This Window`nY: Reboot Now"
 	$Result = Read-Host -Prompt "Reboot Command: [a/n/y]"
 	switch -Exact ($Result.ToUpper()) {
 		"A" {
 			# abort the shutdown and end the script
-			Start-ComputerRestart -Abort $True
+			Start-ComputerRestart -Abort $true
 			Write-Host "Reboot Aborted" -ForegroundColor Red
-			$LoopControl = $False
+			$LoopControl = $false
 		}
 		"N" {
 			# end the script
 			Write-Host "Continuing With Timed Reboot" -ForegroundColor Yellow
-			$LoopControl = $False
+			$LoopControl = $false
 		}
 		"Y" {
 			# abort the current shutdown
-			Start-ComputerRestart -Abort $True
+			Start-ComputerRestart -Abort $true
 			# reboot now and end the script
 			Write-Host "Rebooting Now" -ForegroundColor Green
 			if ($SecureBootEnabled) {
 				# secure boot is enabled, reboot normally
-				$LoopControl = $False
-				Start-ComputerRestart -TimeOut 0 -Firmware $False
+				$LoopControl = $false
+				Start-ComputerRestart -TimeOut 0 -Firmware $false
 			}
 			else {
 				# secure boot is disabled, reboot to firmware
-				$LoopControl = $False
-				Start-ComputerRestart -TimeOut 0 -Firmware $True
+				$LoopControl = $false
+				Start-ComputerRestart -TimeOut 0 -Firmware $true
 			}
 		}
 		Default {
