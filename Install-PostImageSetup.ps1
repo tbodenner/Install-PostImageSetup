@@ -713,37 +713,48 @@ function Update-BIOS {
 		return $false
 	}
 
+	# bios config file path
+	$BiosConfigFilePath = ''
 	# set our command string based on our manufacturer and computer type
 	switch ($Manufacturer.ToUpper()) {
 		'DELL' {
 			# create the command to set our asset tag number
 			$UpdateExe = $Executables['DellAssetExe']
+			# get our config path based on our computer type
 			if ($ComputerType -eq 1) {
-				$UpdateArgs = "--infile $($BiosFilePaths["DellDesktopBios"])"
+				$BiosConfigFilePath = $BiosFilePaths["DellDesktopBios"]
 			}
 			if ($ComputerType -eq 2) {
-				$UpdateArgs = "--infile $($BiosFilePaths["DellLaptopBios"])"
+				$BiosConfigFilePath = $BiosFilePaths["DellLaptopBios"]
 			}
+			# set our argument using our file path
+			$UpdateArgs = "--infile $($BiosConfigFilePath)"
 		}
 		'HP' {
-			# create the command to set our asset tag number
+			# get our bios update utility
 			$UpdateExe = $Executables['HpAssetExe']
+			# get our config path based on our computer type
 			if ($ComputerType -eq 1) {
-				$UpdateArgs = "/set:$($BiosFilePaths["HpDesktopBios"])"
+				$BiosConfigFilePath = $BiosFilePaths["HpDesktopBios"]
 			}
 			if ($ComputerType -eq 2) {
-				$UpdateArgs = "/set:$($BiosFilePaths["HpLaptopBios"])"
+				$BiosConfigFilePath = $BiosFilePaths["HpLaptopBios"]
 			}
+			# set our argument using our file path
+			$UpdateArgs = "/set:$($BiosConfigFilePath)"
 		}
 		'LENOVO' {
 			# create the command to set our asset tag number
 			$UpdateExe = $Executables['LenovoBiosHta']
+			# get our config path based on our computer type
 			if ($ComputerType -eq 1) {
-				$UpdateArgs = "'`"file=$($BiosFilePaths["LenovoDesktopBios"])`"'"
+				$BiosConfigFilePath = $BiosFilePaths["LenovoDesktopBios"]
 			}
 			if ($ComputerType -eq 2) {
-				$UpdateArgs = "'`"file=$($BiosFilePaths["LenovoLaptopBios"])`"'"
+				$BiosConfigFilePath = $BiosFilePaths["LenovoLaptopBios"]
 			}
+			# set our argument using our file path
+			$UpdateArgs = "'`"file=$($BiosConfigFilePath)`"'"
 		}
 		Default {
 			# computer manufacturer not found
@@ -763,9 +774,9 @@ function Update-BIOS {
 
 	# run the command
 	$ReturnCode = Invoke-Process -Executable $UpdateExe -Arguments $UpdateArgs -ReturnExitCode $true
-	Write-Host "Update-BIOS: UpdateExe: $($UpdateExe)"
-	Write-Host "Update-BIOS: UpdateArgs: $($UpdateArgs)"
-	Write-Host "Update-BIOS: ReturnCode: $($ReturnCode)"
+	Write-Host "[DEBUG] Update-BIOS: UpdateExe: $($UpdateExe)"
+	Write-Host "[DEBUG] Update-BIOS: UpdateArgs: $($UpdateArgs)"
+	Write-Host "[DEBUG] Update-BIOS: ReturnCode: $($ReturnCode)"
 	if ($null -ne $ReturnCode) {
 		if ($ReturnCode -eq 0) {
 			# bios update program exited without errors
@@ -1039,31 +1050,31 @@ $TranscriptFile = "$($TempFolder)\PostImageSetup$($Version)-Transcript"
 $TranscriptExtension = '.txt'
 
 # mapped install folder
-$MappedInstall = "$($MapDriveLetter):\$($InstallFolder)"
+$MappedInstall = Join-Path -Path "$($MapDriveLetter):" -ChildPath $InstallFolder
 
 # executable location hashtable
 $Executables = @{
-	"CmdExe"		 = "$($SystemFolder)\cmd.exe"
-	"WusaExe"		 = "$($SystemFolder)\wusa.exe"
-	"PnpUtilExe"	 = "$($SystemFolder)\pnputil.exe"
-	"MsiexecExe"	 = "$($SystemFolder)\msiexec.exe"
-	"PowercfgExe"	 = "$($SystemFolder)\powercfg.exe"
-	"GpupdateExe"	 = "$($SystemFolder)\gpupdate.exe"
-	"GpresultExe"	 = "$($SystemFolder)\gpresult.exe"
-	"DellAssetExe"	 = "$($MappedInstall)\$($DellAssetExePath)"
-	"HpAssetExe"	 = "$($MappedInstall)\$($HpAssetExePath)"
-	"LenovoAssetExe" = "$($MappedInstall)\$($LenovoAssetExePath)"
-	"LenovoBiosHta" = "$($MappedInstall)\$($LenovoBiosToolPath)"
+	"CmdExe"		 = Join-Path -Path $SystemFolder -ChildPath "cmd.exe"
+	"WusaExe"		 = Join-Path -Path $SystemFolder -ChildPath "wusa.exe"
+	"PnpUtilExe"	 = Join-Path -Path $SystemFolder -ChildPath "pnputil.exe"
+	"MsiexecExe"	 = Join-Path -Path $SystemFolder -ChildPath "msiexec.exe"
+	"PowercfgExe"	 = Join-Path -Path $SystemFolder -ChildPath "powercfg.exe"
+	"GpupdateExe"	 = Join-Path -Path $SystemFolder -ChildPath "gpupdate.exe"
+	"GpresultExe"	 = Join-Path -Path $SystemFolder -ChildPath "gpresult.exe"
+	"DellAssetExe"	 = Join-Path -Path $MappedInstall -ChildPath $DellAssetExePath
+	"HpAssetExe"	 = Join-Path -Path $MappedInstall -ChildPath $HpAssetExePath
+	"LenovoAssetExe" = Join-Path -Path $MappedInstall -ChildPath $LenovoAssetExePath
+	"LenovoBiosHta"  = Join-Path -Path $MappedInstall -ChildPath $LenovoBiosToolPath
 }
 
 # bios file path hashtable
 $BiosFilePaths = @{
-	"DellDesktopBios" = "$($MappedInstall)\$($DellDesktopBiosPath)"
-	"DellLaptopBios" = "$($MappedInstall)\$($DellLaptopBiosPath)"
-	"HpDesktopBios" = "$($MappedInstall)\$($HpDesktopBiosPath)"
-	"HpLaptopBios" = "$($MappedInstall)\$($HpLaptopBiosPath)"
-	"LenovoDesktopBios" = "$($MappedInstall)\$($LenovoDesktopBiosPath)"
-	"LenovoLaptopBios" = "$($MappedInstall)\$($LenovoLaptopBiosPath)"
+	"DellDesktopBios"   = Join-Path -Path $MappedInstall -ChildPath $DellDesktopBiosPath
+	"DellLaptopBios"    = Join-Path -Path $MappedInstall -ChildPath $DellLaptopBiosPath
+	"HpDesktopBios"     = Join-Path -Path $MappedInstall -ChildPath $HpDesktopBiosPath
+	"HpLaptopBios"      = Join-Path -Path $MappedInstall -ChildPath $HpLaptopBiosPath
+	"LenovoDesktopBios" = Join-Path -Path $MappedInstall -ChildPath $LenovoDesktopBiosPath
+	"LenovoLaptopBios"  = Join-Path -Path $MappedInstall -ChildPath $LenovoLaptopBiosPath
 }
 
 # file to read the work item data from
