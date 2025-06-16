@@ -82,6 +82,7 @@ $ScriptName = 'Install-PostImageSetup'
 		Removed PSRemote version 7 update
 		Updated the OSD Staging check to include the va.gov domain
 		Added changing BIOS settings
+		Removed secure boot check, and no longer boots to firmware
 #>
 #endregion CHANGE LOG
 
@@ -1430,6 +1431,11 @@ Update-Progress -Status "Done" -Echo $true
 # stop the transcript
 Stop-Transcript | Out-Null
 
+# reboot the computer
+Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $false
+Write-Host "Rebooting in $($RebootTimeout) seconds" -ForegroundColor Green
+
+<#
 # check if secure boot is enabled
 [bool]$SecureBootEnabled = Confirm-SecureBootUEFI
 # check if the securebootenabled variable was assigned a value
@@ -1450,6 +1456,7 @@ else {
 	Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $true
 	Write-Host "Rebooting to Firmware (BIOS/UEFI) in $($RebootTimeout) seconds" -ForegroundColor Green
 }
+#>
 
 # ask the user if they want to stop the reboot
 $LoopControl = $true
