@@ -12,6 +12,7 @@ $ScriptName = 'Install-PostImageSetup'
 #      drivers on a freshly imaged laptop or desktop.     #
 # ------------------------------------------------------- #
 
+#region CHANGE LOG
 # ------------------------------------------------------- #
 #                     CHANGE LOG                          #
 # ------------------------------------------------------- #
@@ -82,7 +83,9 @@ $ScriptName = 'Install-PostImageSetup'
 		Updated the OSD Staging check to include the va.gov domain
 		Added changing BIOS settings
 #>
+#endregion CHANGE LOG
 
+#region CLASSES
 # ------------------------------------------------------- #
 #                      CLASSES                            #
 # ------------------------------------------------------- #
@@ -166,7 +169,9 @@ class DeleteParameter : BaseParameter {
 		$this.Path = $Path
 	}
 }
+#endregion CLASSES
 
+#region FUNCTIONS
 # ------------------------------------------------------- #
 #                        FUNCTIONS                        #
 # ------------------------------------------------------- #
@@ -745,7 +750,7 @@ function Update-BIOS {
 		}
 		'LENOVO' {
 			# create the command to set our asset tag number
-			$UpdateExe = $Executables['LenovoBiosHta']
+			$UpdateExe = $Executables['CmdExe']
 			# get our config path based on our computer type
 			if ($ComputerType -eq 1) {
 				$BiosConfigFilePath = $BiosFilePaths["LenovoDesktopBios"]
@@ -754,7 +759,7 @@ function Update-BIOS {
 				$BiosConfigFilePath = $BiosFilePaths["LenovoLaptopBios"]
 			}
 			# set our argument using our file path
-			$UpdateArgs = "'`"file=$($BiosConfigFilePath)`"'"
+			$UpdateArgs = "/c $($Executables['LenovoBiosHta']) `"file=$($BiosConfigFilePath)`" `"log=$($TempFolder)`""
 		}
 		Default {
 			# computer manufacturer not found
@@ -968,7 +973,9 @@ function Test-ConfigValueNull {
 	# otherwise, return the value
 	$Value
 }
+#endregion FUNCTIONS
 
+#region CONFIG
 # ------------------------------------------------------- #
 #                         CONFIG                          #
 # ------------------------------------------------------- #
@@ -1040,7 +1047,9 @@ $RSATFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "RSATF
 
 # config was loaded from the json file
 Write-Host "Config loaded." -ForegroundColor DarkGray
+#endregion CONFIG
 
+#region PROPERTIES
 # ------------------------------------------------------- #
 #                       PROPERTIES                        #
 # ------------------------------------------------------- #
@@ -1048,34 +1057,6 @@ Write-Host "Config loaded." -ForegroundColor DarkGray
 # transcript file
 $TranscriptFile = "$($TempFolder)\PostImageSetup$($Version)-Transcript"
 $TranscriptExtension = '.txt'
-
-# mapped install folder
-$MappedInstall = Join-Path -Path "$($MapDriveLetter):" -ChildPath $InstallFolder
-
-# executable location hashtable
-$Executables = @{
-	"CmdExe"		 = Join-Path -Path $SystemFolder -ChildPath "cmd.exe"
-	"WusaExe"		 = Join-Path -Path $SystemFolder -ChildPath "wusa.exe"
-	"PnpUtilExe"	 = Join-Path -Path $SystemFolder -ChildPath "pnputil.exe"
-	"MsiexecExe"	 = Join-Path -Path $SystemFolder -ChildPath "msiexec.exe"
-	"PowercfgExe"	 = Join-Path -Path $SystemFolder -ChildPath "powercfg.exe"
-	"GpupdateExe"	 = Join-Path -Path $SystemFolder -ChildPath "gpupdate.exe"
-	"GpresultExe"	 = Join-Path -Path $SystemFolder -ChildPath "gpresult.exe"
-	"DellAssetExe"	 = Join-Path -Path $MappedInstall -ChildPath $DellAssetExePath
-	"HpAssetExe"	 = Join-Path -Path $MappedInstall -ChildPath $HpAssetExePath
-	"LenovoAssetExe" = Join-Path -Path $MappedInstall -ChildPath $LenovoAssetExePath
-	"LenovoBiosHta"  = Join-Path -Path $MappedInstall -ChildPath $LenovoBiosToolPath
-}
-
-# bios file path hashtable
-$BiosFilePaths = @{
-	"DellDesktopBios"   = Join-Path -Path $MappedInstall -ChildPath $DellDesktopBiosPath
-	"DellLaptopBios"    = Join-Path -Path $MappedInstall -ChildPath $DellLaptopBiosPath
-	"HpDesktopBios"     = Join-Path -Path $MappedInstall -ChildPath $HpDesktopBiosPath
-	"HpLaptopBios"      = Join-Path -Path $MappedInstall -ChildPath $HpLaptopBiosPath
-	"LenovoDesktopBios" = Join-Path -Path $MappedInstall -ChildPath $LenovoDesktopBiosPath
-	"LenovoLaptopBios"  = Join-Path -Path $MappedInstall -ChildPath $LenovoLaptopBiosPath
-}
 
 # file to read the work item data from
 $JsonFilePath = Join-Path -Path $PSScriptRoot -ChildPath $JsonFileName
@@ -1112,11 +1093,13 @@ $ProgressCount = 0
 $ProgressTotal = 0
 
 # pause before clearing the screen
-Start-Sleep -Seconds 1
+Start-Sleep -Seconds 2
 
 # clear the screen
 Clear-Host
+#endregion PROPERTIES
 
+#region MAIN SCRIPT
 # ------------------------------------------------------- #
 #                       MAIN SCRIPT                       #
 # ------------------------------------------------------- #
@@ -1156,6 +1139,34 @@ Write-Host "$($ScriptName) v$($Version)`n" -ForegroundColor DarkGray
 # map the drive for our script root
 Update-Progress -Status "Mapping Drive" -Echo $true
 New-PSDrive -Name $MapDriveLetter -Root $MapDriveFolder -Persist -PSProvider "FileSystem" -ErrorAction SilentlyContinue | Out-Null
+
+# mapped install folder
+$MappedInstall = Join-Path -Path "$($MapDriveLetter):" -ChildPath $InstallFolder
+
+# executable location hashtable
+$Executables = @{
+	"CmdExe"		 = Join-Path -Path $SystemFolder -ChildPath "cmd.exe"
+	"WusaExe"		 = Join-Path -Path $SystemFolder -ChildPath "wusa.exe"
+	"PnpUtilExe"	 = Join-Path -Path $SystemFolder -ChildPath "pnputil.exe"
+	"MsiexecExe"	 = Join-Path -Path $SystemFolder -ChildPath "msiexec.exe"
+	"PowercfgExe"	 = Join-Path -Path $SystemFolder -ChildPath "powercfg.exe"
+	"GpupdateExe"	 = Join-Path -Path $SystemFolder -ChildPath "gpupdate.exe"
+	"GpresultExe"	 = Join-Path -Path $SystemFolder -ChildPath "gpresult.exe"
+	"DellAssetExe"	 = Join-Path -Path $MappedInstall -ChildPath $DellAssetExePath
+	"HpAssetExe"	 = Join-Path -Path $MappedInstall -ChildPath $HpAssetExePath
+	"LenovoAssetExe" = Join-Path -Path $MappedInstall -ChildPath $LenovoAssetExePath
+	"LenovoBiosHta"  = Join-Path -Path $MappedInstall -ChildPath $LenovoBiosToolPath
+}
+
+# bios file path hashtable
+$BiosFilePaths = @{
+	"DellDesktopBios"   = Join-Path -Path $MappedInstall -ChildPath $DellDesktopBiosPath
+	"DellLaptopBios"    = Join-Path -Path $MappedInstall -ChildPath $DellLaptopBiosPath
+	"HpDesktopBios"     = Join-Path -Path $MappedInstall -ChildPath $HpDesktopBiosPath
+	"HpLaptopBios"      = Join-Path -Path $MappedInstall -ChildPath $HpLaptopBiosPath
+	"LenovoDesktopBios" = Join-Path -Path $MappedInstall -ChildPath $LenovoDesktopBiosPath
+	"LenovoLaptopBios"  = Join-Path -Path $MappedInstall -ChildPath $LenovoLaptopBiosPath
+}
 
 # change to our mapped drive
 Set-Location "$($MapDriveLetter):"
@@ -1478,3 +1489,4 @@ while ($LoopControl) {
 		}
 	}
 }
+#endregion MAIN SCRIPT

@@ -46,5 +46,30 @@
     "mesg": "Fusion Driver",
     "ltop": "true",
     "dtop": "false"
+  },
+  {
+    "type": "CopyFile",
+    "file": "Installers\\Lenovo21H2\\Lenovo21H2BIOS\\",
+    "dest": "C:\\Temp\\Lenovo21H2BIOS",
+    "mesg": "Copying Lenovo BIOS Installer to 'C:\\Temp\\Lenovo21H2BIOS'",
+    "ltop": "true",
+    "dtop": "false"
+  },
+  {
+    "type": "InstallExe",
+    "name": "Lenovo 21H2 1.28 BIOS",
+    "file": "C:\\Temp\\Lenovo21H2BIOS\\WINUPTP.EXE",
+    "mesg": "Lenovo 21H2 1.28 BIOS (No GUI)",
+    "args": "-s",
+    "ltop": "true",
+    "dtop": "false",
+    "schk": "true"
+  },
+  {
+    "type": "DeleteFile",
+    "file": "C:\\Temp\\Lenovo21H2BIOS\\",
+    "mesg": "Deleting Lenovo BIOS Installer Folder 'C:\\Temp\\Lenovo21H2BIOS'",
+    "ltop": "true",
+    "dtop": "false"
   }
 ]

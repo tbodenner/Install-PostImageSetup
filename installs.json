@@ -52,7 +52,7 @@
   {
     "type": "InstallMsi",
     "name": "DisplayLink Graphics",
-    "file": "Installers\\DisplayLink Graphics Driver\\Synaptics DisplayLink Graphics Driver 11.2 M0.msi",
+    "file": "Installers\\DisplayLink Graphics Driver\\DisplayLink_Win10RS_11.7.msi",
     "args": "/passive",
     "mesg": "DisplayLink Drivers",
     "ltop": "true",
