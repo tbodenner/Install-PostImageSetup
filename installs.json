@@ -10,6 +10,16 @@
     "schk": "false"
   },
   {
+    "type": "InstallMsi",
+    "name": "ECFax Messenger",
+    "file": "Installers\\ECFax Messenger\\ECFax-Messenger-1.5.0.99-Installer.msi",
+    "args": "ALLUSERS=1 /passive /norestart",
+    "mesg": "ECFax Messenger",
+    "ltop": "true",
+    "dtop": "true",
+    "schk": "false"
+  },
+  {
     "type": "InstallExe",
     "name": "PS667",
     "file": "Installers\\Ambir PS667 Drivers\\PS667_v3.1.0_setup.exe",
