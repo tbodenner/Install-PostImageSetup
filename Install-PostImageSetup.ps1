@@ -367,7 +367,7 @@ function Install-Driver {
 		[Parameter(Mandatory=$true)][string]$FilePath
 	)
 	# install the driver using pnputil
-	& $Executables['PnpUtilExe'] /add-driver $FilePath /subdirs /install
+	& $Executables['PnpUtilExe'] /add-driver $FilePath /subdirs /install | Out-Null
 }
 
 # copy a file
@@ -1480,6 +1480,7 @@ while ($LoopControl) {
 			Start-ComputerRestart -Abort $true
 			# reboot now and end the script
 			Write-Host "Rebooting Now" -ForegroundColor Green
+			<#
 			if ($SecureBootEnabled) {
 				# secure boot is enabled, reboot normally
 				$LoopControl = $false
@@ -1490,6 +1491,10 @@ while ($LoopControl) {
 				$LoopControl = $false
 				Start-ComputerRestart -TimeOut 0 -Firmware $true
 			}
+			#>
+			# stop our loop and reboot
+			$LoopControl = $false
+			Start-ComputerRestart -TimeOut 0 -Firmware $false
 		}
 		Default {
 			Write-Host "Invalid Response" -ForegroundColor Red
