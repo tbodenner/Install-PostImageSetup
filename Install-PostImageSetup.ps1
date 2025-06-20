@@ -780,9 +780,7 @@ function Update-BIOS {
 
 	# run the command
 	$ReturnCode = Invoke-Process -Executable $UpdateExe -Arguments $UpdateArgs -ReturnExitCode $true
-	Write-Host "[DEBUG] Update-BIOS: UpdateExe: $($UpdateExe)"
-	Write-Host "[DEBUG] Update-BIOS: UpdateArgs: $($UpdateArgs)"
-	Write-Host "[DEBUG] Update-BIOS: ReturnCode: $($ReturnCode)"
+	# check if we got a return code
 	if ($null -ne $ReturnCode) {
 		if ($ReturnCode -eq 0) {
 			# bios update program exited without errors
@@ -1399,10 +1397,6 @@ $ProgressTotal = $WorkArray.Count
 # install each exe in our array
 $WorkArray.ForEach({ Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 500 })
 
-# enabling powershell remote for powershell version 7
-#Update-Progress -Status "Enabling PowerShell v7 Remoting" -Echo $true
-#Enable-PSRemoting -Force -WarningAction SilentlyContinue -ErrorAction SilentlyContinue | Out-Null
-
 # run gpupdate
 Update-Progress -Status "Running GP Update" -Echo $true
 & $Executables['CmdExe'] /c "ECHO N | $($Executables['GpupdateExe']) /force /wait:180" | Out-Null
@@ -1435,29 +1429,6 @@ Stop-Transcript | Out-Null
 Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $false
 Write-Host "Rebooting in $($RebootTimeout) seconds" -ForegroundColor Green
 
-<#
-# check if secure boot is enabled
-[bool]$SecureBootEnabled = Confirm-SecureBootUEFI
-# check if the securebootenabled variable was assigned a value
-if ($null -eq $SecureBootEnabled) {
-	# if null, write a message and exit the script
-	Write-Host "!! Error, Unable to get Secure Boot status!" -ForegroundColor Red
-	exit
-}
-
-# reboot the computer
-if ($SecureBootEnabled) {
-	# if true, reboot the computer
-	Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $false
-	Write-Host "Rebooting in $($RebootTimeout) seconds" -ForegroundColor Green
-}
-else {
-	# if false, reboot the computer to the firmware
-	Start-ComputerRestart -TimeOut $RebootTimeout -Firmware $true
-	Write-Host "Rebooting to Firmware (BIOS/UEFI) in $($RebootTimeout) seconds" -ForegroundColor Green
-}
-#>
-
 # ask the user if they want to stop the reboot
 $LoopControl = $true
 while ($LoopControl) {
@@ -1480,18 +1451,6 @@ while ($LoopControl) {
 			Start-ComputerRestart -Abort $true
 			# reboot now and end the script
 			Write-Host "Rebooting Now" -ForegroundColor Green
-			<#
-			if ($SecureBootEnabled) {
-				# secure boot is enabled, reboot normally
-				$LoopControl = $false
-				Start-ComputerRestart -TimeOut 0 -Firmware $false
-			}
-			else {
-				# secure boot is disabled, reboot to firmware
-				$LoopControl = $false
-				Start-ComputerRestart -TimeOut 0 -Firmware $true
-			}
-			#>
 			# stop our loop and reboot
 			$LoopControl = $false
 			Start-ComputerRestart -TimeOut 0 -Firmware $false
