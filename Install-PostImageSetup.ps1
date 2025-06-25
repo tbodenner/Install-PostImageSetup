@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.2.6'
+$Version = '1.2.7'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -83,6 +83,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Updated the OSD Staging check to include the va.gov domain
 		Added changing BIOS settings
 		Removed secure boot check, and no longer boots to firmware
+	1.2.7:
+		ATH computers will not have any software or drivers installed
 #>
 #endregion CHANGE LOG
 
@@ -379,8 +381,18 @@ function Copy-File {
 	)
 	# try to the copy the file
 	try {
-		# copy the file
-		Copy-Item -Path $Path -Destination $Destination -Force -Recurse | Out-Null
+		# check if our paths exist
+		$PathExists = Test-Path -Path $Path
+		$DestinationExists = Test-Path -Path $Destination
+		# if both paths exist
+		if (($PathExists -eq $true) -and ($DestinationExists -eq $true)) {
+			# copy the file
+			Copy-Item -Path $Path -Destination $Destination -Force -Recurse | Out-Null
+		}
+		else {
+			# write our error
+			Write-Host "`t Unable to copy file. Path or Destination doesn't exist." -ForegroundColor Red
+		}
 	}
 	catch {
 		# write our error
@@ -1195,8 +1207,17 @@ if ((Test-Path -Path "$($MapDriveLetter):\") -eq $false) {
 	exit
 }
 
-# add a registry value and set it's value
-Set-DisableAppsForDevices
+# is the computer an AT Hybrid computer
+$IsATHybrid = $false
+
+# check if this computer is an AT Hybrid computer
+if ($env:COMPUTERNAME -like '*-SPATH*') { $IsATHybrid = $true }
+
+# only do this for a non-ath computer
+if ($IsATHybrid -eq $false) {
+	# add a registry value and set it's value
+	Set-DisableAppsForDevices
+}
 
 # boolean to determine if we will update our asset tag
 $UpdateTag = $false
@@ -1368,34 +1389,65 @@ else
 	Write-Host "Computer has already been moved out of the staging OU." -ForegroundColor Green
 }
 
-# check if this computer model is a lenovo 21h2
-if ($ComputerModel -eq $LenovoModel21H2) {
-	# create our path for our json installs file
-	$LenovoModel21H2JsonFile = Join-Path -Path $PSScriptRoot -ChildPath $LenovoModel21H2JsonFileName
-	# get the commands from the install file and add them to our work array
-	$WorkArray += Get-WorkItemsFromJson -JsonFilePath $LenovoModel21H2JsonFile -ExeHashtable $Executables -InstallRootPath $MappedInstall -ComputerType $ComputerType
+# only do this for a non-ath computer
+if ($IsATHybrid -eq $false) {
+	# check if this computer model is a lenovo 21h2
+	if ($ComputerModel -eq $LenovoModel21H2) {
+		# create our path for our json installs file
+		$LenovoModel21H2JsonFile = Join-Path -Path $PSScriptRoot -ChildPath $LenovoModel21H2JsonFileName
+		# get the commands from the install file and add them to our work array
+		$WorkArray += Get-WorkItemsFromJson -JsonFilePath $LenovoModel21H2JsonFile -ExeHashtable $Executables -InstallRootPath $MappedInstall -ComputerType $ComputerType
 
-	# get the bios major and minor version
-	$BiosMajor = (Get-CimInstance -ClassName Win32_BIOS).SystemBiosMajorVersion
-	$BiosMinor = (Get-CimInstance -ClassName Win32_BIOS).SystemBiosMinorVersion
-	# create a dot separated version
-	$BiosVersion = "$($BiosMajor).$($BiosMinor)"
-	# check if we have the correct bios version installed
-	if ($BiosVersion -eq $LenovoModel21H2BiosTargetVersion) {
-		Write-Host "Lenovo BIOS $($BiosVersion) already installed" -ForegroundColor DarkGreen
-		# remove the last three bios commands from the array that copy, install, and delete
-		$WorkArray = $WorkArray[0..($WorkArray.Length - 4)]
-	}
+		# get the bios major and minor version
+		$BiosMajor = (Get-CimInstance -ClassName Win32_BIOS).SystemBiosMajorVersion
+		$BiosMinor = (Get-CimInstance -ClassName Win32_BIOS).SystemBiosMinorVersion
+		# create a dot separated version
+		$BiosVersion = "$($BiosMajor).$($BiosMinor)"
+		# check if we have the correct bios version installed
+		if ($BiosVersion -eq $LenovoModel21H2BiosTargetVersion) {
+			Write-Host "Lenovo BIOS $($BiosVersion) already installed" -ForegroundColor DarkGreen
+			# remove the last three bios commands from the array that copy, install, and delete
+			$WorkArray = $WorkArray[0..($WorkArray.Length - 4)]
+		}
+	}	
+}
+else {
+	Write-Host ".--------------------------------------------------------." -ForegroundColor Magenta
+	Write-Host "| Skipping driver and software installs for ATH Computer |" -ForegroundColor Magenta
+	Write-Host "'--------------------------------------------------------'" -ForegroundColor Magenta
 }
 
 # all work to be done will go into this array
-$WorkArray += Get-WorkItemsFromJson -JsonFilePath $JsonFilePath -ExeHashtable $Executables -InstallRootPath $MappedInstall -ComputerType $ComputerType
+	$WorkItemJsonParameters = @{
+		JsonFilePath	= $JsonFilePath
+		ExeHashtable	= $Executables
+		InstallRootPath	= $MappedInstall
+		ComputerType	= $ComputerType
+	}
+	$WorkArray += Get-WorkItemsFromJson @WorkItemJsonParameters
 
 # get total progress count
 $ProgressTotal = $WorkArray.Count
 
 # install each exe in our array
-$WorkArray.ForEach({ Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 500 })
+$WorkArray.ForEach({
+	# boolean to skip the install or driver
+	$SkipWorkItem = $false
+	# check if this computer is an ATH computer
+	if ($IsATHybrid -eq $true) {
+		# get our item's type
+		$WorkItemType = $_.GetType()
+		# check if this is an installer or driver
+		if ($WorkItemType -in @([InstallParameter],[DriverParameter])) {
+			# skip this item for ATH computers
+			$SkipWorkItem = $true
+		}
+	}
+	if ($SkipWorkItem -eq $false) {
+		# start the work item
+		Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 500
+	}
+})
 
 # run gpupdate
 Update-Progress -Status "Running GP Update" -Echo $true
