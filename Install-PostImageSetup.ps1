@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.2.7'
+$Version = '1.2.8'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -85,6 +85,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Removed secure boot check, and no longer boots to firmware
 	1.2.7:
 		ATH computers will not have any software or drivers installed
+	1.2.8:
+		Added a registry value change to hide the last logged in user
 #>
 #endregion CHANGE LOG
 
@@ -1448,6 +1450,21 @@ $WorkArray.ForEach({
 		Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 500
 	}
 })
+
+# registry path and value name
+$LastLoggedInUserRegistryPath = 'HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System'
+$LastLoggedInUserPropertyName = 'dontdisplaylastusername'
+# get our current value
+$CurrentLastLoggedInUserValue = Get-ItemPropertyValue -Path $LastLoggedInUserRegistryPath `
+													  -Name $LastLoggedInUserPropertyName `
+													  -ErrorAction SilentlyContinue
+# check if our value is not one
+if (($null -eq $CurrentLastLoggedInUserValue) -or ($CurrentLastLoggedInUserValue -ne 1)) {
+	# changing registry value to hide last logged in user
+	Set-ItemProperty -Path $LastLoggedInUserRegistryPath `
+					 -Name $LastLoggedInUserPropertyName `
+					 -Value 1 -Force -ErrorAction SilentlyContinue
+}
 
 # run gpupdate
 Update-Progress -Status "Running GP Update" -Echo $true
