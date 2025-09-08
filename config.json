@@ -19,5 +19,7 @@
   "LenovoModel21H2JsonFileName": "Lenovo21H2-21H2S5AJ00-installs.json",
   "LenovoModel21H2BiosTargetVersion": "1.28",
   "RSATFolderPath": "Tools\\RSAT",
-  "RSATFileName": "WindowsTH-KB2693643-x64.msu"
+  "RSATFileName": "WindowsTH-KB2693643-x64.msu",
+  "DesktopOU": "OU=Workstations,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov",
+  "LaptopOU": "OU=Laptops,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
 }

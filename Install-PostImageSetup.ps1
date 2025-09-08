@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.2.8'
+$Version = '1.2.9'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -87,6 +87,8 @@ $ScriptName = 'Install-PostImageSetup'
 		ATH computers will not have any software or drivers installed
 	1.2.8:
 		Added a registry value change to hide the last logged in user
+	1.2.9:
+		Updated script to no longer use RSAT AD tools
 #>
 #endregion CHANGE LOG
 
@@ -683,6 +685,7 @@ function Install-WorkItem {
 	}
 }
 
+<#
 # get the active directory organizational unit of this computer
 function Get-ComputerOU {
 	# get the gpresult data
@@ -712,6 +715,104 @@ function Test-IsStagingOU {
 	else {
 		# otherwise, return false
 		return $false
+	}
+}
+#>
+
+function Get-ComputerDistinguishedName {
+	param (
+		[Parameter(Mandatory=$true)][string]$ComputerName
+	)
+	# create an AD search object
+	$ADSearcher = New-Object System.DirectoryServices.DirectorySearcher
+	# create our filter
+	$ADSearcher.Filter = "(&(objectCategory=computer)(name=$($ComputerName)))"
+	# search for our computer
+	$ComputerObject = $ADSearcher.FindOne()
+	# check if we found a computer
+	if ($null -eq $ComputerObject) {
+		# a computer was not found, return null
+		return $null
+	}
+	else {
+		# otherwise, return our computer's distinguished name
+		return $ComputerObject.Properties["distinguishedname"]
+	}
+}
+
+function Test-IsStagingOU {
+	param (
+		[Parameter(Mandatory=$true)][string]$ComputerDN
+	)
+	# the group we are looking for
+	$StagingGroup = 'OU=OSD Staging'
+	# check if the computer is in the staging group
+	if (($ComputerDN.Contains($StagingGroup)) -eq $true) {
+		# computer is still in the staging group
+		return $true
+	}
+	else {
+		# computer is not in the staging group
+		return $false
+	}
+}
+
+function Move-ComputerWithLdap {
+	# get our computer's distinguished name
+	$ComputerDN = Get-ComputerDistinguishedName($ComputerName)
+	# check if we found our computer
+	if ($null -eq $ComputerDN) {
+		Write-Host "Unable to find computer in AD" -ForegroundColor Red
+	}
+	else {
+		# check if the computer is in the staging group
+		if ((Test-IsStagingOU($ComputerDN)) -eq $true) {
+			# still in staging
+			Update-Progress -Status "Attempting to move computer in Active Directory" -Echo $true
+			# get our target OU
+			$TargetOU = $null
+			# get our OU based on our computer type
+			switch ($ComputerType) {
+				1 {
+					# set our OU to the va.gov desktop OU
+					$TargetOU = $DesktopOU
+				}
+				2 {
+					# set our OU to the va.gov laptop OU
+					$TargetOU = $LaptopOU
+				}
+				default {
+					# if we can't determine the computer type, we can't set the target OU, so return
+					Write-Host ".------------------------------------------------------------------." -ForegroundColor Red
+					Write-Host "| Error: Unable to determine computer type. Computer was NOT moved |" -ForegroundColor Red
+					Write-Host "'------------------------------------------------------------------'" -ForegroundColor Red
+					return
+				}
+			}
+			# get the computer entry object from the distinguished name
+			$ComputerEntry = [ADSI]"LDAP://$($ComputerDN)"
+			# get our OU entry object
+			$TargetEntry = [ADSI]"LDAP://$($TargetOU)"
+			# move the computer to the target OU
+			$ComputerEntry.MoveTo($TargetEntry.Path)
+			# wait a short time for the move
+			Start-Sleep -Seconds 2
+			# get our computer's distinguished name, again
+			$ComputerDN = Get-ComputerDistinguishedName($ComputerName)
+			# verify if the computer was moved
+			if ((Test-IsStagingOU($ComputerDN)) -eq $true) {
+				# computer was not moved and is still in staging
+				Write-Host "Failed to move computer in Active Directory" -ForegroundColor Red
+			}
+			else {
+				# computer was moved out of the staging OU
+				Write-Host "Moved computer '$($ComputerName)' to '$($TargetOU)'." -ForegroundColor Green
+			}
+		}
+		else {
+			# not in the staging OU
+			Write-Host "Computer has already been moved out of the staging OU." -ForegroundColor Green
+		}
 	}
 }
 
@@ -1054,9 +1155,14 @@ $LenovoModel21H2JsonFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashta
 # update the bios if not this version
 $LenovoModel21H2BiosTargetVersion = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoModel21H2BiosTargetVersion"
 
+<#
 # filename and path for the RSAT installer
 $RSATFolderPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "RSATFolderPath"
 $RSATFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "RSATFileName"
+#>
+
+$DesktopOU = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "DesktopOU"
+$LaptopOU = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LaptopOU"
 
 # config was loaded from the json file
 Write-Host "Config loaded." -ForegroundColor DarkGray
@@ -1287,6 +1393,10 @@ else {
 
 # check if this computer is still in the staging group in active directory
 Update-Progress -Status "Checking Computer's OU" -Echo $true
+# try to move the computer in AD
+Move-ComputerWithLdap($ComputerName)
+
+<#
 if (Test-IsStagingOU -eq $true) {
 	# get our installer path
 	$RSATInstallerPath = Join-Path -Path $MappedInstall -ChildPath $RSATFolderPath -AdditionalChildPath $RSATFileName
@@ -1390,6 +1500,7 @@ else
 {
 	Write-Host "Computer has already been moved out of the staging OU." -ForegroundColor Green
 }
+#>
 
 # only do this for a non-ath computer
 if ($IsATHybrid -eq $false) {
