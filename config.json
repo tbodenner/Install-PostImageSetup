@@ -5,6 +5,9 @@
   "TempFolder": "C:\\Temp",
   "SystemFolder": "C:\\Windows\\System32",
   "JsonFileName": "installs.json",
+  "BaselineFileName": "baseline.json",
+  "AssetTagLength": 5,
+  "RebootTimeout": 60,
   "DellAssetExePath": "Tools\\BIOS\\Dell\\cctk.exe",
   "DellDesktopBiosPath": "Tools\\BIOS\\Dell\\Configs\\DellDesktopBiosConfig.txt",
   "DellLaptopBiosPath": "Tools\\BIOS\\Dell\\Configs\\DellLaptopBiosConfig.txt",
@@ -18,8 +21,6 @@
   "LenovoModel21H2": "21H2S5AJ00",
   "LenovoModel21H2JsonFileName": "Lenovo21H2-21H2S5AJ00-installs.json",
   "LenovoModel21H2BiosTargetVersion": "1.28",
-  "RSATFolderPath": "Tools\\RSAT",
-  "RSATFileName": "WindowsTH-KB2693643-x64.msu",
   "DesktopOU": "OU=Workstations,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov",
   "LaptopOU": "OU=Laptops,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
 }

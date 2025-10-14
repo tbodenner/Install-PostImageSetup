@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.2.9'
+$Version = '1.3.0'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -89,6 +89,9 @@ $ScriptName = 'Install-PostImageSetup'
 		Added a registry value change to hide the last logged in user
 	1.2.9:
 		Updated script to no longer use RSAT AD tools
+	1.3.0:
+		Added checks for baseline software
+		Moved asset tag length and reboot time variables to config.json
 #>
 #endregion CHANGE LOG
 
@@ -207,6 +210,23 @@ function Invoke-Process {
 		#Write-Host "Exe: $($Executable)" -ForegroundColor Magenta
 		# otherwise, run the command and return null
 		Start-Process @Parameters -Wait -NoNewWindow | Out-Null
+		return $null
+	}
+}
+
+# get our baseline install names from the json file
+function Get-BaselineItemsFromJson {
+	param (
+		[Parameter(Mandatory=$true)][string]$JsonFilePath
+	)
+
+	# try to read our data from the json file
+	try {
+		Get-Content $JsonFilePath | ConvertFrom-Json -AsHashtable
+	}
+	catch {
+		# if we are unable to read the file, write an error message and return nothing
+		Write-Host "Unable to get Baseline JSON data from file $($JsonFilePath)."
 		return $null
 	}
 }
@@ -685,40 +705,6 @@ function Install-WorkItem {
 	}
 }
 
-<#
-# get the active directory organizational unit of this computer
-function Get-ComputerOU {
-	# get the gpresult data
-	$ComputerOU = & $Executables['GpresultExe'] /r /scope computer 2>nul
-	# get our distinguished name from the data
-	$ComputerOU = [string]($ComputerOU | Select-String "CN=")
-	# if the object is null
-	if ($null -eq $ComputerOU) {
-		# return an empty array
-		return @()
-	}
-	# trim any whitespace, and split the string before returning the result
-	return $ComputerOU.Trim() -Split ","
-}
-
-# check if this computer is in a specific organizational unit
-function Test-IsStagingOU {
-	# the group we are looking for
-	$StagingGroup = 'OU=OSD Staging'
-	# get our computer's UOs
-	$OUnits = Get-ComputerOU
-	# check if the group is in our ou string
-	if ($OUnits -contains $StagingGroup) {
-		# if found, return true
-		return $true
-	}
-	else {
-		# otherwise, return false
-		return $false
-	}
-}
-#>
-
 function Get-ComputerDistinguishedName {
 	param (
 		[Parameter(Mandatory=$true)][string]$ComputerName
@@ -1087,6 +1073,69 @@ function Test-ConfigValueNull {
 	# otherwise, return the value
 	$Value
 }
+
+# check if all our baseline applications are installed
+function Test-Baseline {
+	param (
+		[Parameter(Mandatory=$true)][hashtable]$BaselineHashtable
+	)
+	# update our progress
+	Update-Progress -Status "Checking Baseline" -Echo $true -Color Yellow
+	# max number of missing packages
+	$MaxFailCount = 2
+	# keep track of failures
+	$SoftwareNotFoundCount = 0
+	# loop through the hashtable's keys
+	foreach ($Key in $BaselineHashtable.Keys) {
+		# loop through the hashtable's value
+		foreach ($Value in $BaselineHashtable[$Key]) {
+			# check if each software package is installed
+			$Result = Test-IsInstalled -Name $Value
+			# add our result to the software name line
+			if ($Result -eq $true) {
+				# software found
+				Write-Host "  Installed: $($Value)" -ForegroundColor Green
+			}
+			else {
+				# software not found
+				Write-Host "  Not Found: $($Value)" -ForegroundColor Red
+				# update our count
+				$SoftwareNotFoundCount += 1
+			}
+		}
+	}
+
+	# check our fail count
+	if ($SoftwareNotFoundCount -lt $MaxFailCount) {
+		# if less than our max, return true
+		return $true
+	}
+	else {
+		# otherwise, return false
+		return $false
+	}
+}
+
+# try to parse a string into an integer
+function Test-ParseInt {
+	param (
+		[Parameter(Mandatory=$true)][string]$Name,
+		[Parameter(Mandatory=$true)][string]$InputString
+	)
+
+	# our output int
+	$ReturnInt = [int]::MinValue
+	# parse our int
+	$ParseResult = [int]::TryParse($InputString, [ref]$ReturnInt)
+	# check our parse result
+	if ($ParseResult -eq $false) {
+		# write the error
+		Write-Host "ERROR: Failed to parse integer for $($Name) from value '$($InputString)'." -ForegroundColor Red
+		# exit the script
+		exit
+	}
+	return $ReturnInt
+}
 #endregion FUNCTIONS
 
 #region CONFIG
@@ -1134,6 +1183,9 @@ $InstallFolder = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "Inst
 # file name for our json installs file
 $JsonFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "JsonFileName"
 
+# file name for our baseline check file
+$BaselineFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "BaselineFileName"
+
 # paths for our bios asset update executables
 $DellAssetExePath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "DellAssetExePath"
 $HpAssetExePath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "HpAssetExePath"
@@ -1154,15 +1206,16 @@ $LenovoModel21H2 = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "Le
 $LenovoModel21H2JsonFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoModel21H2JsonFileName"
 # update the bios if not this version
 $LenovoModel21H2BiosTargetVersion = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoModel21H2BiosTargetVersion"
-
-<#
-# filename and path for the RSAT installer
-$RSATFolderPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "RSATFolderPath"
-$RSATFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "RSATFileName"
-#>
-
+# AD OUs for our computers
 $DesktopOU = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "DesktopOU"
 $LaptopOU = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LaptopOU"
+
+# asset tag length
+$AssetTagLengthString = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "AssetTagLength"
+$AssetTagLength = Test-ParseInt -Name "AssetTagLength" -InputString $AssetTagLengthString
+# reboot variables in seconds
+$RebootTimeoutString = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "RebootTimeout"
+$RebootTimeout = Test-ParseInt -Name "RebootTimeout" -InputString $RebootTimeoutString
 
 # config was loaded from the json file
 Write-Host "Config loaded." -ForegroundColor DarkGray
@@ -1180,11 +1233,19 @@ $TranscriptExtension = '.txt'
 # file to read the work item data from
 $JsonFilePath = Join-Path -Path $PSScriptRoot -ChildPath $JsonFileName
 
-# reboot variables in seconds
-$RebootTimeout = 60
-
-# asset tag length
-$AssetTagLength = 5
+# file to read the work item data from
+$BaselineFilePath = Join-Path -Path $PSScriptRoot -ChildPath $BaselineFileName
+# check if our baseline json file exists
+if ((Test-Path -Path $BaselineFilePath) -eq $true) {
+	# get our data from our json file
+	$BaselineJsonData = [hashtable](Get-BaselineItemsFromJson -JsonFilePath $BaselineFilePath)
+}
+else {
+	# write an error
+	Write-Host "ERROR: Baseline JSON file not found. Exiting." -ForegroundColor Red
+	# exit the script
+	exit
+}
 
 # read cim data
 Write-Host "Getting computer information..." -ForegroundColor DarkGray
@@ -1254,6 +1315,20 @@ Start-Transcript -Path $TranscriptFile -NoClobber | Out-Null
 # write our script's name and version
 # this is done after our transcript starts to record the script version
 Write-Host "$($ScriptName) v$($Version)`n" -ForegroundColor DarkGray
+
+# check our baseline software
+$BaselineResult = Test-Baseline -BaselineHashtable $BaselineJsonData
+# stop the script if our baseline check has failed
+if ($BaselineResult -eq $false) {
+	# write an error
+	Write-Host ".-----------------------------------------------------------." -ForegroundColor Red
+	Write-Host "| Baseline check has FAILED. Use dBAT to scan the computer. |" -ForegroundColor Red
+	Write-Host "| Install missing packages or re-image computer.            |" -ForegroundColor Red
+	Write-Host "| Script cannot continue. Exiting.                          |" -ForegroundColor Red
+	Write-Host "'-----------------------------------------------------------'" -ForegroundColor Red
+	# exit the script
+	exit
+}
 
 # map the drive for our script root
 Update-Progress -Status "Mapping Drive" -Echo $true
@@ -1395,112 +1470,6 @@ else {
 Update-Progress -Status "Checking Computer's OU" -Echo $true
 # try to move the computer in AD
 Move-ComputerWithLdap($ComputerName)
-
-<#
-if (Test-IsStagingOU -eq $true) {
-	# get our installer path
-	$RSATInstallerPath = Join-Path -Path $MappedInstall -ChildPath $RSATFolderPath -AdditionalChildPath $RSATFileName
-
-	Write-Host "Attempting to move computer in Active Directory" -ForegroundColor Yellow
-	Update-Progress -Status "Installing RSAT" -Echo $true
-	# install the rsat tools
-	$RSATInstallArg = "$($RSATInstallerPath) /quiet /norestart"
-	Invoke-Process -Executable $Executables['WusaExe'] -Arguments $RSATInstallArg
-
-	# check if the PowerShell command we need was installed
-	if ($null -ne (Get-Command -Name 'Get-ADComputer' -ErrorAction SilentlyContinue)) {
-		# get our domain servers
-		$DomainServer = Get-ADDomainController -Discover
-		$DomainName = $DomainServer.Domain
-
-		# where we found the computer object
-		$FoundComputerInVaGov = $DomainName -eq 'va.gov'
-
-		# our staging name will be used to find our imaged computer
-		$StagingName = $null
-
-		# check for va.gov or local
-		if ($FoundComputerInVaGov -eq $true) {
-			# distinguished name of the computer if in the va.gov staging OU
-			$StagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
-		}
-		else {
-			# distinguished name of the computer if in the local staging OU
-			$StagingName = "CN=$($ComputerName),OU=OSD Staging,OU=Test Lab,DC=v18,DC=med,DC=va,DC=gov"
-		}
-
-		# get the computer object from AD
-		$ComputerObject = Get-ADComputer -Identity $ComputerName -Server $DomainServer
-
-		# check if we got a computer object
-		if ($null -eq $ComputerObject) {
-			# get the computer object from the va.gov server
-			$ComputerObject = Get-ADComputer -Identity $ComputerName -Server $DomainServer
-			# update our boolean
-			$FoundComputerInVaGov = $true
-		}
-
-		# get the computer's distinguished name
-		$ComputerDistinguishedName = $ComputerObject.DistinguishedName
-
-		# check, again, if the computer is still in the staging OU
-		if ($ComputerDistinguishedName -eq $StagingName) {
-			# get the computer's object guid
-			$ComputerGUID = $ComputerObject.ObjectGUID
-
-			$TargetOU = $null
-			# check if this computer is a desktop
-			if ($ComputerType -eq 1) {
-				# check for va.gov or local
-				if ($FoundComputerInVaGov -eq $true) {
-					# set our OU to the va.gov workstations OU
-					$TargetOU = "OU=Workstations,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
-				}
-				else {
-					# set our OU to the local workstations OU
-					$TargetOU = "OU=Workstations,OU=Prescott (PRE),OU=VISN18,DC=v18,DC=med,DC=va,DC=gov"
-				}
-			}
-			# check if this computer is a laptop
-			if ($ComputerType -eq 2) {
-				# check for va.gov or local
-				if ($FoundComputerInVaGov -eq $true) {
-					# set our OU to the va.gov laptops OU
-					$TargetOU = "OU=Laptops,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
-				}
-				else {
-					# set our OU to the local laptops OU
-					$TargetOU = "OU=Laptops,OU=Prescott (PRE),OU=VISN18,DC=v18,DC=med,DC=va,DC=gov"
-				}
-			}
-
-			# move the computer if we have an OU
-			if ($null -ne $TargetOU) {
-				try {
-					# move the computer to the correct OU
-					Move-ADObject -Identity $ComputerGUID -TargetPath $TargetOU -Server $DomainServer
-					Write-Host "Moved computer '$($ComputerName)' to '$($TargetOU)'." -ForegroundColor Green
-				}
-				catch {
-					# the command to move the computer failed
-					Write-Host "Error: Failed to move computer to correct OU." -ForegroundColor Red
-				}
-			}
-		}
-		# uninstall the rsat tools
-		Update-Progress -Status "Removing RSAT" -Echo $true
-		$RSATUninstallArg = "$($RSATInstallerPath) /uninstall /quiet /norestart"
-		Invoke-Process -Executable $Executables['WusaExe'] -Arguments $RSATUninstallArg
-	}
-	else {
-		Write-Host "Error: Failed to move computer to correct OU. (RSAT install failed)" -ForegroundColor Red
-	}
-}
-else
-{
-	Write-Host "Computer has already been moved out of the staging OU." -ForegroundColor Green
-}
-#>
 
 # only do this for a non-ath computer
 if ($IsATHybrid -eq $false) {
