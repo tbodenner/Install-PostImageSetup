@@ -1323,9 +1323,13 @@ if ($BaselineResult -eq $false) {
 	# write an error
 	Write-Host ".-----------------------------------------------------------." -ForegroundColor Red
 	Write-Host "| Baseline check has FAILED. Use dBAT to scan the computer. |" -ForegroundColor Red
-	Write-Host "| Install missing packages or re-image computer.            |" -ForegroundColor Red
+	Write-Host "| Install missing packages or re-image the computer.        |" -ForegroundColor Red
 	Write-Host "| Script cannot continue. Exiting.                          |" -ForegroundColor Red
 	Write-Host "'-----------------------------------------------------------'" -ForegroundColor Red
+	# change our location
+	Set-Location -Path $TempFolder
+	# stop the transcript
+	Stop-Transcript | Out-Null
 	# exit the script
 	exit
 }
