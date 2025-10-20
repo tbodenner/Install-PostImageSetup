@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.0'
+$Version = '1.3.1'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -92,6 +92,8 @@ $ScriptName = 'Install-PostImageSetup'
 	1.3.0:
 		Added checks for baseline software
 		Moved asset tag length and reboot time variables to config.json
+	1.3.1:
+		Moved banner to config.json file
 #>
 #endregion CHANGE LOG
 
@@ -1136,6 +1138,52 @@ function Test-ParseInt {
 	}
 	return $ReturnInt
 }
+
+# write our banner from an array of lines and colors
+function Write-Banner {
+	param (
+		[Parameter(Mandatory=$true)][array]$InputArray
+	)
+	# keys
+	$TextKey = "Text"
+	$ColorKey = "Color"
+
+	# loop through our array
+	foreach ($Item in $InputArray) {
+		# check if we have a text key in our hashtable
+		if ($Item.ContainsKey($TextKey) -eq $true) {
+			# get our text from the item
+			$Text = $Item[$TextKey]
+			# check if our text is a string
+			if ($Text -is [string])
+			{
+				# our color
+				$Color = $null
+				
+				# check if we have a color key in our hashtable
+				if ($Item.ContainsKey($ColorKey) -eq $true) {	
+					# try to get our color from the item
+					$ColorParseResult = [Enum]::TryParse([System.ConsoleColor], $Item[$ColorKey], [ref]$Color)
+					# check if our color parse failed
+					if ($ColorParseResult -eq $false) {
+						# set our color to null
+						$Color = $null	
+					}
+				}
+
+				# check if we have a color
+				if ($null -eq $Color) {
+					# write our text without a foreground color
+					Write-Host $Text
+				}
+				else {
+					# otherwise, write our text with our foreground color
+					Write-Host $Text -ForegroundColor $Color
+				}
+			}
+		}
+	}
+}
 #endregion FUNCTIONS
 
 #region CONFIG
@@ -1166,6 +1214,9 @@ if ($null -eq $JsonConfigHashtable) {
 	Write-Host "ERROR: No config data read from JSON file '$($JsonConfigFileName)'." -ForegroundColor Red
 	exit
 }
+
+# banner array
+$Banner = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "Banner"
 
 # mapped drive variables
 $MapDriveLetter = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "MapDriveLetter"
@@ -1284,13 +1335,8 @@ Clear-Host
 #                       MAIN SCRIPT                       #
 # ------------------------------------------------------- #
 
-# draw banner
-Write-Host " _____                         _   _      ____ _____ _______ " -ForegroundColor Red
-Write-Host "|  __ \                       | | | |    / __ \_   _|__   __|" -ForegroundColor Red
-Write-Host "| |__) | __ ___  ___  ___ ___ | |_| |_  | |  | || |    | |   " -ForegroundColor White
-Write-Host "|  ___/ '__/ _ \/ __|/ __/ _ \| __| __| | |  | || |    | |   " -ForegroundColor White
-Write-Host "| |   | | |  __/\__ \ (_| (_) | |_| |_  | |__| || |_   | |   " -ForegroundColor Blue
-Write-Host "|_|   |_|  \___||___/\___\___/ \__|\__|  \____/_____|  |_|   " -ForegroundColor Blue
+# draw our banner
+Write-Banner -InputArray $Banner
 
 # check if the temp directory exists
 if ((Test-Path -Path $TempFolder) -eq $false) {
