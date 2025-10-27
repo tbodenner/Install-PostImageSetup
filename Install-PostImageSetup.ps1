@@ -969,11 +969,13 @@ function Get-AssetTag {
 	}
 	# check if our asset tag is the correct length
 	if (($Number.Length -ge $AssetTagMinLength) -and ($Number.Length -le $AssetTagMaxLength)) {
+		# return our asset number
+		return $Number
+	}
+	else {
 		# return null if not the correct length
 		return $null
 	}
-	# return our asset number
-	return $Number
 }
 
 # add or update a value in the registry
