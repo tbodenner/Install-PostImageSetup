@@ -968,7 +968,7 @@ function Get-AssetTag {
 		return $null
 	}
 	# check if our asset tag is the correct length
-	if ($Number.Length -ne $AssetTagLength) {
+	if (($Number.Length -ge $AssetTagMinLength) -and ($Number.Length -le $AssetTagMaxLength)) {
 		# return null if not the correct length
 		return $null
 	}
@@ -1264,8 +1264,10 @@ $DesktopOU = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "DesktopO
 $LaptopOU = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LaptopOU"
 
 # asset tag length
-$AssetTagLengthString = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "AssetTagLength"
-$AssetTagLength = Test-ParseInt -Name "AssetTagLength" -InputString $AssetTagLengthString
+$AssetTagMinLengthString = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "AssetTagMinLength"
+$AssetTagMinLength = Test-ParseInt -Name "AssetTagMinLength" -InputString $AssetTagMinLengthString
+$AssetTagMaxLengthString = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "AssetTagMaxLength"
+$AssetTagMaxLength = Test-ParseInt -Name "AssetTagMaxLength" -InputString $AssetTagMaxLengthString
 # reboot variables in seconds
 $RebootTimeoutString = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "RebootTimeout"
 $RebootTimeout = Test-ParseInt -Name "RebootTimeout" -InputString $RebootTimeoutString
@@ -1446,7 +1448,7 @@ if ((Test-Path -Path "$($MapDriveLetter):\") -eq $false) {
 $IsATHybrid = $false
 
 # check if this computer is an AT Hybrid computer
-if ($env:COMPUTERNAME -like '*-SPATH*') { $IsATHybrid = $true }
+if ($ComputerName -like '*-SPATH*') { $IsATHybrid = $true }
 
 # only do this for a non-ath computer
 if ($IsATHybrid -eq $false) {
