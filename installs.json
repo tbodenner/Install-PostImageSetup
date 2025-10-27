@@ -12,7 +12,7 @@
   {
     "type": "InstallMsi",
     "name": "ECFax Messenger",
-    "file": "Installers\\ECFax Messenger\\ECFax-Messenger-1.5.0.99-Installer.msi",
+    "file": "Installers\\ECFax Messenger\\ECFax-Messenger-1.5.1.37-Installer.msi",
     "args": "ALLUSERS=1 /passive /norestart",
     "mesg": "ECFax Messenger",
     "ltop": "true",
