@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.1'
+$Version = '1.3.2'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -94,6 +94,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Moved asset tag length and reboot time variables to config.json
 	1.3.1:
 		Moved banner to config.json file
+	1.3.2:
+		Updated getting asset number from device name to find 5 or 6 digits
 #>
 #endregion CHANGE LOG
 
@@ -952,7 +954,7 @@ function Get-AssetTag {
 	)
 	# get the asset number from our computer name
 	# match five digits at the end of the line
-	$Found = $Name -match '[0-9]{5}$'
+	$Found = $Name -match '[0-9]{5,6}$'
 	# check if we have a match
 	if ($Found -eq $false) {
 		# return null if not found
