@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.2'
+$Version = '1.3.3'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -96,6 +96,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Moved banner to config.json file
 	1.3.2:
 		Updated getting asset number from device name to find 5 or 6 digits
+	1.3.3:
+		Some desktops are workstations in the CIM data. Updated script to treat workstations as desktops.
 #>
 #endregion CHANGE LOG
 
@@ -1083,12 +1085,20 @@ function Test-ConfigValueNull {
 # check if all our baseline applications are installed
 function Test-Baseline {
 	param (
-		[Parameter(Mandatory=$true)][hashtable]$BaselineHashtable
+		[Parameter(Mandatory=$true)][hashtable]$BaselineHashtable,
+		[Parameter(Mandatory=$true)][int]$ComputerType
 	)
 	# update our progress
 	Update-Progress -Status "Checking Baseline" -Echo $true -Color Yellow
-	# max number of missing packages
-	$MaxFailCount = 2
+	# check if our computer is a desktop, set our max number of missing packages
+	if ($ComputerType -eq 1) {
+		# desktops will allow an extra failure due to cisco anyconnect not being installed on them
+		$MaxFailCount = 3
+	}
+	else {
+		# otherwise, the max will be two
+		$MaxFailCount = 2
+	}
 	# keep track of failures
 	$SoftwareNotFoundCount = 0
 	# loop through the hashtable's keys
@@ -1309,8 +1319,14 @@ Write-Host "Getting computer information..." -ForegroundColor DarkGray
 
 # get computer name
 $ComputerName = $env:ComputerName
-# get computer type: 1 = desktop, 2 = laptop
+# get computer type: 1 = desktop, 2 = laptop, 3 = workstation
 $ComputerType = (Get-CimInstance -ClassName Win32_ComputerSystem -Property PCSystemType).PCSystemType
+# workstations will be considered the same as desktops
+# so if our computer type is 3
+if ($ComputerType -eq 3) {
+	# set it to 1
+	$ComputerType = 1
+}
 # get computer manufacturer
 $ComputerManufacturer = (Get-CimInstance -ClassName Win32_ComputerSystem).Manufacturer
 # check for alternate variations of the manufacture's name
@@ -1369,7 +1385,7 @@ Start-Transcript -Path $TranscriptFile -NoClobber | Out-Null
 Write-Host "$($ScriptName) v$($Version)`n" -ForegroundColor DarkGray
 
 # check our baseline software
-$BaselineResult = Test-Baseline -BaselineHashtable $BaselineJsonData
+$BaselineResult = Test-Baseline -BaselineHashtable $BaselineJsonData -ComputerType $ComputerType
 # stop the script if our baseline check has failed
 if ($BaselineResult -eq $false) {
 	# write an error
