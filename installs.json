@@ -1,206 +1,206 @@
 [
   {
-    "type": "InstallExe",
-    "name": "StreemPrint",
-    "file": "Installers\\StreemPrint\\StreemPrint Setup 7.4.2.exe",
-    "args": "/S",
-    "mesg": "StreemPrint (No GUI)",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallExe",
+    "Name": "StreemPrint",
+    "FilePath": "Installers\\StreemPrint\\StreemPrint Setup 7.4.2.exe",
+    "Arguments": "/S",
+    "Message": "StreemPrint (No GUI)",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "InstallMsi",
-    "name": "ECFax Messenger",
-    "file": "Installers\\ECFax Messenger\\ECFax-Messenger-1.5.1.37-Installer.msi",
-    "args": "ALLUSERS=1 /passive /norestart",
-    "mesg": "ECFax Messenger",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallMsi",
+    "Name": "ECFax Messenger",
+    "FilePath": "Installers\\ECFax Messenger\\ECFax-Messenger-1.5.1.37-Installer.msi",
+    "Arguments": "ALLUSERS=1 /passive /norestart",
+    "Message": "ECFax Messenger",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "InstallExe",
-    "name": "PS667",
-    "file": "Installers\\Ambir PS667 Drivers\\PS667_v3.1.0_setup.exe",
-    "args": "/S /v/qn",
-    "mesg": "Ambir PS667 Driver (No GUI)",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallExe",
+    "Name": "PS667",
+    "FilePath": "Installers\\Ambir PS667 Drivers\\PS667_v3.1.0_setup.exe",
+    "Arguments": "/S /v/qn",
+    "Message": "Ambir PS667 Driver (No GUI)",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "InstallExe",
-    "name": "DS687",
-    "file": "Installers\\Ambir DS687 Drivers\\Ambir-DS687-v4.0.4.exe",
-    "args": "/silent",
-    "mesg": "Ambir DS687 Drivers (No GUI)",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallExe",
+    "Name": "DS687",
+    "FilePath": "Installers\\Ambir DS687 Drivers\\Ambir-DS687-v4.0.4.exe",
+    "Arguments": "/silent",
+    "Message": "Ambir DS687 Drivers (No GUI)",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "InstallExe",
-    "name": "BigFix Remote Control - Target",
-    "file": "Installers\\BigFix Target Installer\\trc_target_setup.exe",
-    "args": "/S /v/qn",
-    "mesg": "BigFix RC Target (No GUI)",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallExe",
+    "Name": "BigFix Remote Control - Target",
+    "FilePath": "Installers\\BigFix Target Installer\\trc_target_setup.exe",
+    "Arguments": "/S /v/qn",
+    "Message": "BigFix RC Target (No GUI)",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "InstallMsi",
-    "name": "LynxClient",
-    "file": "Installers\\Lynx\\LynxClient_v10.4.25.0.msi",
-    "args": "/passive HOSTNAME=vhapreapplynx PROFILE=PanicButton",
-    "mesg": "Lynx",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallMsi",
+    "Name": "LynxClient",
+    "FilePath": "Installers\\Lynx\\LynxClient_v10.4.25.0.msi",
+    "Arguments": "/passive HOSTNAME=vhapreapplynx PROFILE=PanicButton",
+    "Message": "Lynx",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "InstallMsi",
-    "name": "DisplayLink Graphics",
-    "file": "Installers\\DisplayLink Graphics Driver\\DisplayLink_Win10RS_11.7.msi",
-    "args": "/passive",
-    "mesg": "DisplayLink Drivers",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallMsi",
+    "Name": "DisplayLink Graphics",
+    "FilePath": "Installers\\DisplayLink Graphics Driver\\DisplayLink_Win10RS_11.7.msi",
+    "Arguments": "/passive",
+    "Message": "DisplayLink Drivers",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "InstallMsi",
-    "name": "Universal Print Driver",
-    "file": "Installers\\VA HP Universal Print Drivers\\PrintDriver.msi",
-    "args": "ALLUSERS=1 REBOOT=R /passive",
-    "mesg": "VA HP Universal Print Drivers",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallMsi",
+    "Name": "Universal Print Driver",
+    "FilePath": "Installers\\VA HP Universal Print Drivers\\PrintDriver.msi",
+    "Arguments": "ALLUSERS=1 REBOOT=R /passive",
+    "Message": "VA HP Universal Print Drivers",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "InstallMsi",
-    "name": "HP USB Universal Dock G2 Drivers",
-    "file": "Installers\\VA HP Dock Drivers\\HPUSBUniversalDockG2Drivers.msi",
-    "args": "ALLUSERS=1 REBOOT=R /qn",
-    "mesg": "VA HP USB Universal Dock G2 Drivers",
-    "ltop": "true",
-    "dtop": "false",
-    "schk": "false"
+    "InstallType": "InstallMsi",
+    "Name": "HP USB Universal Dock G2 Drivers",
+    "FilePath": "Installers\\VA HP Dock Drivers\\HPUSBUniversalDockG2Drivers.msi",
+    "Arguments": "ALLUSERS=1 REBOOT=R /qn",
+    "Message": "VA HP USB Universal Dock G2 Drivers",
+    "IsLaptop": true,
+    "IsDesktop": false,
+    "SkipCheck": false
   },
   {
-    "type": "InstallMsi",
-    "name": "Micro Focus Reflection DLL for 2FA",
-    "file": "Installers\\VA Micro Focus Reflection DLL for 2FA\\MicroFocusReflectionDLL.msi",
-    "args": "ALLUSERS=1 REBOOT=R /passive",
-    "mesg": "VA Micro Focus Reflection DLL for 2FA",
-    "ltop": "true",
-    "dtop": "true",
-    "schk": "false"
+    "InstallType": "InstallMsi",
+    "Name": "Micro Focus Reflection DLL for 2FA",
+    "FilePath": "Installers\\VA Micro Focus Reflection DLL for 2FA\\MicroFocusReflectionDLL.msi",
+    "Arguments": "ALLUSERS=1 REBOOT=R /passive",
+    "Message": "VA Micro Focus Reflection DLL for 2FA",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
   },
   {
-    "type": "CopyFile",
-    "file": "Files\\StreemPrint\\global_properties.json",
-    "dest": "C:\\Program Files (x86)\\Streem Print\\props",
-    "mesg": "StreemPrint Config File",
-    "ltop": "true",
-    "dtop": "true"
+    "InstallType": "CopyFile",
+    "FilePath": "Files\\StreemPrint\\global_properties.json",
+    "Destination": "C:\\Program Files (x86)\\Streem Print\\props",
+    "Message": "StreemPrint Config File",
+    "IsLaptop": true,
+    "IsDesktop": true
   },
   {
-    "type": "CopyFile",
-    "file": "Files\\Icons\\Printers.lnk",
-    "dest": "Public\\Desktop",
-    "mesg": "Printer Shortcut",
-    "ltop": "true",
-    "dtop": "true"
+    "InstallType": "CopyFile",
+    "FilePath": "Files\\Icons\\Printers.lnk",
+    "Destination": "Public\\Desktop",
+    "Message": "Printer Shortcut",
+    "IsLaptop": true,
+    "IsDesktop": true
   },
   {
-    "type": "CopyFile",
-    "file": "Files\\Icons\\gpupdate.lnk",
-    "dest": "Public\\Desktop",
-    "mesg": "gpupdate Shortcut",
-    "ltop": "true",
-    "dtop": "true"
+    "InstallType": "CopyFile",
+    "FilePath": "Files\\Icons\\gpupdate.lnk",
+    "Destination": "Public\\Desktop",
+    "Message": "gpupdate Shortcut",
+    "IsLaptop": true,
+    "IsDesktop": true
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
-    "mesg": "Changing Desktop Monitor Sleep Time",
-    "ltop": "false",
-    "dtop": "true"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "Message": "Changing Desktop Monitor Sleep Time",
+    "IsLaptop": false,
+    "IsDesktop": true
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
-    "mesg": "Changing Desktop Computer Sleep Time",
-    "ltop": "false",
-    "dtop": "true"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "Message": "Changing Desktop Computer Sleep Time",
+    "IsLaptop": false,
+    "IsDesktop": true
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETACTIVE SCHEME_BALANCED",
-    "mesg": "Setting Power Scheme",
-    "ltop": "false",
-    "dtop": "true"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACTIVE SCHEME_BALANCED",
+    "Message": "Setting Power Scheme",
+    "IsLaptop": false,
+    "IsDesktop": true
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
-    "mesg": "Changing Laptop Monitor Sleep Time AC",
-    "ltop": "true",
-    "dtop": "false"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "Message": "Changing Laptop Monitor Sleep Time AC",
+    "IsLaptop": true,
+    "IsDesktop": false
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
-    "mesg": "Changing Laptop Computer Sleep Time AC",
-    "ltop": "true",
-    "dtop": "false"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "Message": "Changing Laptop Computer Sleep Time AC",
+    "IsLaptop": true,
+    "IsDesktop": false
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
-    "mesg": "Changing Laptop Monitor Sleep Time DC",
-    "ltop": "true",
-    "dtop": "false"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "Message": "Changing Laptop Monitor Sleep Time DC",
+    "IsLaptop": true,
+    "IsDesktop": false
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
-    "mesg": "Changing Laptop Computer Sleep Time DC",
-    "ltop": "true",
-    "dtop": "false"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "Message": "Changing Laptop Computer Sleep Time DC",
+    "IsLaptop": true,
+    "IsDesktop": false
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETACVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
-    "mesg": "Changing Laptop Power Settings AC",
-    "ltop": "true",
-    "dtop": "false"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
+    "Message": "Changing Laptop Power Settings AC",
+    "IsLaptop": true,
+    "IsDesktop": false
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
-    "mesg": "Changing Laptop Power Settings DC",
-    "ltop": "true",
-    "dtop": "false"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
+    "Message": "Changing Laptop Power Settings DC",
+    "IsLaptop": true,
+    "IsDesktop": false
   },
   {
-    "type": "RunCommand",
-    "file": "PowercfgExe",
-    "args": "/SETACTIVE SCHEME_BALANCED",
-    "mesg": "Setting Power Scheme",
-    "ltop": "true",
-    "dtop": "false"
+    "InstallType": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACTIVE SCHEME_BALANCED",
+    "Message": "Setting Power Scheme",
+    "IsLaptop": true,
+    "IsDesktop": false
   }
 ]

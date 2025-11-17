@@ -98,6 +98,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Updated getting asset number from device name to find 5 or 6 digits
 	1.3.3:
 		Some desktops are workstations in the CIM data. Updated script to treat workstations as desktops.
+	1.3.4:
+		Updated json config names to make them more readable.
 #>
 #endregion CHANGE LOG
 
@@ -264,8 +266,8 @@ function Get-WorkItemsFromJson {
 		# try to convert our string values to boolean values
 		try {
 			# convert our strings to bools and store the result
-			$LaptopBool = [System.Convert]::ToBoolean($Element.ltop)
-			$DesktopBool = [System.Convert]::ToBoolean($Element.dtop)
+			$LaptopBool = [System.Convert]::ToBoolean($Element.IsLaptop)
+			$DesktopBool = [System.Convert]::ToBoolean($Element.IsDesktop)
 			# if the computer is a laptop (2) and our bool is false
 			if (($ComputerType -eq 2) -and ($LaptopBool -eq $false)) {
 				# then skip this item
@@ -283,58 +285,58 @@ function Get-WorkItemsFromJson {
 			continue
 		}
 		# switch on the work item type
-		switch ($Element.type) {
+		switch ($Element.InstallType) {
 			{ ($_ -eq "InstallExe") -or ($_ -eq "InstallMsi") } {
 				# check if our install path is on the c: drive
-				if ($Element.file.ToUpper() -like "C:\*") {
+				if ($Element.FilePath.ToUpper() -like "C:\*") {
 					# we have a root C: drive, don't change the path
-					$InstallerPath = $Element.file
+					$InstallerPath = $Element.FilePath
 				}
 				else {
 					# otherwise, add our root install path to our json file path
-					$InstallerPath = Join-Path -Path $InstallRootPath -ChildPath $Element.file
+					$InstallerPath = Join-Path -Path $InstallRootPath -ChildPath $Element.FilePath
 				}
 				# get our skip check bool
-				$SkipCheckBool = [System.Convert]::ToBoolean($Element.schk)
+				$SkipCheckBool = [System.Convert]::ToBoolean($Element.SkipCheck)
 				# create the work item and add it to our array
-				$WorkItemArray += [InstallParameter]::new($Element.name, $InstallerPath, $Element.args, $SkipCheckBool, $Element.mesg, $LaptopBool, $DesktopBool)
+				$WorkItemArray += [InstallParameter]::new($Element.Name, $InstallerPath, $Element.Arguments, $SkipCheckBool, $Element.Message, $LaptopBool, $DesktopBool)
 			}
 			"CopyFile" {
 				# add our root install path to our json file path
-				$InstallerPath = Join-Path -Path $InstallRootPath -ChildPath $Element.file
+				$InstallerPath = Join-Path -Path $InstallRootPath -ChildPath $Element.FilePath
 				# get our json destination path
-				$DestinationPath = $Element.dest
+				$DestinationPath = $Element.Destination
 				# if the destination is the computer's public desktop
 				if ($DestinationPath -eq "Public\Desktop") {
 					# then update our path using the environment's path
 					$DestinationPath = "$($env:PUBLIC)\Desktop"
 				}
 				# create the work item and add it to our array
-				$WorkItemArray += [CopyParameter]::new($InstallerPath, $DestinationPath, $Element.mesg, $LaptopBool, $DesktopBool)
+				$WorkItemArray += [CopyParameter]::new($InstallerPath, $DestinationPath, $Element.Message, $LaptopBool, $DesktopBool)
 			}
 			"RunCommand" {
 				# get the path of our executable from our hashtable
-				$ExePath = $ExeHashtable[$Element.file]
+				$ExePath = $ExeHashtable[$Element.FilePath]
 				# if we did not get a path
 				if ($null -eq $ExePath) {
 					# skip this item
-					Write-Host "JSON Error: Unknown executable '$($Element.file)'." -ForegroundColor Red
+					Write-Host "JSON Error: Unknown executable '$($Element.FilePath)'." -ForegroundColor Red
 					continue
 				}
 				# create the work item and add it to our array
-				$WorkItemArray += [CommandParameter]::new($ExePath, $Element.args, $Element.mesg, $LaptopBool, $DesktopBool)
+				$WorkItemArray += [CommandParameter]::new($ExePath, $Element.Arguments, $Element.Message, $LaptopBool, $DesktopBool)
 			}
 			"Driver" {
 				# create the full path for our driver file
-				$DriverFile = Join-Path -Path $InstallRootPath -ChildPath $Element.file
+				$DriverFile = Join-Path -Path $InstallRootPath -ChildPath $Element.FilePath
 				# create the work item and add it to our array
-				$WorkItemArray += [DriverParameter]::new($Element.name, $DriverFile, $Element.mesg, $LaptopBool, $DesktopBool)
+				$WorkItemArray += [DriverParameter]::new($Element.Name, $DriverFile, $Element.Message, $LaptopBool, $DesktopBool)
 			}
 			"DeleteFile" {
 				# create the work item and add it to our array
-				$WorkItemArray += [DeleteParameter]::new($Element.file, $Element.mesg, $LaptopBool, $DesktopBool)
+				$WorkItemArray += [DeleteParameter]::new($Element.FilePath, $Element.Message, $LaptopBool, $DesktopBool)
 			}
-			Default { Write-Host "JSON Error: Unknown type '$($Element.type)'." -ForegroundColor Red }
+			Default { Write-Host "JSON Error: Unknown type '$($Element.InstallType)'." -ForegroundColor Red }
 		}
 	}
 
