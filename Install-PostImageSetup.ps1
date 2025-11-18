@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.3'
+$Version = '1.3.4'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
