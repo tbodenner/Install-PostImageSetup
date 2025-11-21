@@ -1,5 +1,5 @@
 {
-    "main": [
+    "Main": [
         "1E Client x64",
         "SAFE Agent",
         "BigFix Client",
@@ -16,7 +16,7 @@
         "VA PolicyPak License",
         "DDE PP-OP Windows File Associations"
     ],
-    "sub": [
+    "Sub": [
         "Adobe Acrobat Reader",
         "BlackBerry AtHoc Desktop Notifier",
         "Webex",
@@ -33,7 +33,7 @@
         "PolicyPak Browser Routes",
         "Publish My eMail Certs"
     ],
-    "t34": [
+    "T3/4": [
         "VistA Imaging Clinical Display",
         "VistA Imaging Telereader",
         "VistA Imaging Clinical Capture",

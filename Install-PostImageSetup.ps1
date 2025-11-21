@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.4'
+$Version = '1.3.5'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -100,6 +100,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Some desktops are workstations in the CIM data. Updated script to treat workstations as desktops.
 	1.3.4:
 		Updated json config names to make them more readable.
+	1.3.5:
+		Updated AD searcher to set va.gov as entry point.
 #>
 #endregion CHANGE LOG
 
@@ -717,8 +719,10 @@ function Get-ComputerDistinguishedName {
 	param (
 		[Parameter(Mandatory=$true)][string]$ComputerName
 	)
+	# create an AD entry object
+	$ADEntry = New-Object System.DirectoryServices.DirectoryEntry("GC://DC=va,DC=gov")
 	# create an AD search object
-	$ADSearcher = New-Object System.DirectoryServices.DirectorySearcher
+	$ADSearcher = New-Object System.DirectoryServices.DirectorySearcher($ADEntry)
 	# create our filter
 	$ADSearcher.Filter = "(&(objectCategory=computer)(name=$($ComputerName)))"
 	# search for our computer
