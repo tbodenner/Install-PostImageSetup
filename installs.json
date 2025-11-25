@@ -1,6 +1,6 @@
 [
   {
-    "InstallType": "InstallExe",
+    "Type": "Install",
     "Name": "StreemPrint",
     "FilePath": "Installers\\StreemPrint\\StreemPrint Setup 7.4.2.exe",
     "Arguments": "/S",
@@ -10,7 +10,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallMsi",
+    "Type": "Install",
     "Name": "ECFax Messenger",
     "FilePath": "Installers\\ECFax Messenger\\ECFax-Messenger-1.5.1.37-Installer.msi",
     "Arguments": "ALLUSERS=1 /passive /norestart",
@@ -20,7 +20,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallExe",
+    "Type": "Install",
     "Name": "PS667",
     "FilePath": "Installers\\Ambir PS667 Drivers\\PS667_v3.1.0_setup.exe",
     "Arguments": "/S /v/qn",
@@ -30,7 +30,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallExe",
+    "Type": "Install",
     "Name": "DS687",
     "FilePath": "Installers\\Ambir DS687 Drivers\\Ambir-DS687-v4.0.4.exe",
     "Arguments": "/silent",
@@ -40,7 +40,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallExe",
+    "Type": "Install",
     "Name": "BigFix Remote Control - Target",
     "FilePath": "Installers\\BigFix Target Installer\\trc_target_setup.exe",
     "Arguments": "/S /v/qn",
@@ -50,7 +50,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallMsi",
+    "Type": "Install",
     "Name": "LynxClient",
     "FilePath": "Installers\\Lynx\\LynxClient_v10.4.25.0.msi",
     "Arguments": "/passive HOSTNAME=vhapreapplynx PROFILE=PanicButton",
@@ -60,7 +60,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallMsi",
+    "Type": "Install",
     "Name": "DisplayLink Graphics",
     "FilePath": "Installers\\DisplayLink Graphics Driver\\DisplayLink_Win10RS_11.7.msi",
     "Arguments": "/passive",
@@ -70,7 +70,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallMsi",
+    "Type": "Install",
     "Name": "Universal Print Driver",
     "FilePath": "Installers\\VA HP Universal Print Drivers\\PrintDriver.msi",
     "Arguments": "ALLUSERS=1 REBOOT=R /passive",
@@ -80,7 +80,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallMsi",
+    "Type": "Install",
     "Name": "HP USB Universal Dock G2 Drivers",
     "FilePath": "Installers\\VA HP Dock Drivers\\HPUSBUniversalDockG2Drivers.msi",
     "Arguments": "ALLUSERS=1 REBOOT=R /qn",
@@ -90,7 +90,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "InstallMsi",
+    "Type": "Install",
     "Name": "Micro Focus Reflection DLL for 2FA",
     "FilePath": "Installers\\VA Micro Focus Reflection DLL for 2FA\\MicroFocusReflectionDLL.msi",
     "Arguments": "ALLUSERS=1 REBOOT=R /passive",
@@ -100,7 +100,7 @@
     "SkipCheck": false
   },
   {
-    "InstallType": "CopyFile",
+    "Type": "CopyFile",
     "FilePath": "Files\\StreemPrint\\global_properties.json",
     "Destination": "C:\\Program Files (x86)\\Streem Print\\props",
     "Message": "StreemPrint Config File",
@@ -108,7 +108,7 @@
     "IsDesktop": true
   },
   {
-    "InstallType": "CopyFile",
+    "Type": "CopyFile",
     "FilePath": "Files\\Icons\\Printers.lnk",
     "Destination": "Public\\Desktop",
     "Message": "Printer Shortcut",
@@ -116,7 +116,7 @@
     "IsDesktop": true
   },
   {
-    "InstallType": "CopyFile",
+    "Type": "CopyFile",
     "FilePath": "Files\\Icons\\gpupdate.lnk",
     "Destination": "Public\\Desktop",
     "Message": "gpupdate Shortcut",
@@ -124,7 +124,7 @@
     "IsDesktop": true
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
     "Message": "Changing Desktop Monitor Sleep Time",
@@ -132,7 +132,7 @@
     "IsDesktop": true
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
     "Message": "Changing Desktop Computer Sleep Time",
@@ -140,7 +140,7 @@
     "IsDesktop": true
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETACTIVE SCHEME_BALANCED",
     "Message": "Setting Power Scheme",
@@ -148,7 +148,7 @@
     "IsDesktop": true
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
     "Message": "Changing Laptop Monitor Sleep Time AC",
@@ -156,7 +156,7 @@
     "IsDesktop": false
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
     "Message": "Changing Laptop Computer Sleep Time AC",
@@ -164,7 +164,7 @@
     "IsDesktop": false
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
     "Message": "Changing Laptop Monitor Sleep Time DC",
@@ -172,7 +172,7 @@
     "IsDesktop": false
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
     "Message": "Changing Laptop Computer Sleep Time DC",
@@ -180,7 +180,7 @@
     "IsDesktop": false
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
     "Message": "Changing Laptop Power Settings AC",
@@ -188,7 +188,7 @@
     "IsDesktop": false
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
     "Message": "Changing Laptop Power Settings DC",
@@ -196,7 +196,7 @@
     "IsDesktop": false
   },
   {
-    "InstallType": "RunCommand",
+    "Type": "RunCommand",
     "FilePath": "PowercfgExe",
     "Arguments": "/SETACTIVE SCHEME_BALANCED",
     "Message": "Setting Power Scheme",

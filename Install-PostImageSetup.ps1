@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.5'
+$Version = '1.3.6'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -102,6 +102,9 @@ $ScriptName = 'Install-PostImageSetup'
 		Updated json config names to make them more readable.
 	1.3.5:
 		Updated AD searcher to set va.gov as entry point.
+	1.3.6:
+		Updated names in install config.
+		Removed custom installs for Lenovo 21H2 laptop.
 #>
 #endregion CHANGE LOG
 
@@ -287,8 +290,8 @@ function Get-WorkItemsFromJson {
 			continue
 		}
 		# switch on the work item type
-		switch ($Element.InstallType) {
-			{ ($_ -eq "InstallExe") -or ($_ -eq "InstallMsi") } {
+		switch ($Element.Type) {
+			"Install" {
 				# check if our install path is on the c: drive
 				if ($Element.FilePath.ToUpper() -like "C:\*") {
 					# we have a root C: drive, don't change the path
@@ -338,7 +341,7 @@ function Get-WorkItemsFromJson {
 				# create the work item and add it to our array
 				$WorkItemArray += [DeleteParameter]::new($Element.FilePath, $Element.Message, $LaptopBool, $DesktopBool)
 			}
-			Default { Write-Host "JSON Error: Unknown type '$($Element.InstallType)'." -ForegroundColor Red }
+			Default { Write-Host "JSON Error: Unknown type '$($Element.Type)'." -ForegroundColor Red }
 		}
 	}
 
@@ -1271,12 +1274,6 @@ $LenovoBiosToolPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key 
 $LenovoDesktopBiosPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoDesktopBiosPath"
 $LenovoLaptopBiosPath = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoLaptopBiosPath"
 
-# computer model to install the lenovo intel audio drivers and updated BIOS
-$LenovoModel21H2 = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoModel21H2"
-# json file for our custom installs
-$LenovoModel21H2JsonFileName = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoModel21H2JsonFileName"
-# update the bios if not this version
-$LenovoModel21H2BiosTargetVersion = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LenovoModel21H2BiosTargetVersion"
 # AD OUs for our computers
 $DesktopOU = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "DesktopOU"
 $LaptopOU = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key "LaptopOU"
@@ -1549,29 +1546,8 @@ Update-Progress -Status "Checking Computer's OU" -Echo $true
 # try to move the computer in AD
 Move-ComputerWithLdap($ComputerName)
 
-# only do this for a non-ath computer
-if ($IsATHybrid -eq $false) {
-	# check if this computer model is a lenovo 21h2
-	if ($ComputerModel -eq $LenovoModel21H2) {
-		# create our path for our json installs file
-		$LenovoModel21H2JsonFile = Join-Path -Path $PSScriptRoot -ChildPath $LenovoModel21H2JsonFileName
-		# get the commands from the install file and add them to our work array
-		$WorkArray += Get-WorkItemsFromJson -JsonFilePath $LenovoModel21H2JsonFile -ExeHashtable $Executables -InstallRootPath $MappedInstall -ComputerType $ComputerType
-
-		# get the bios major and minor version
-		$BiosMajor = (Get-CimInstance -ClassName Win32_BIOS).SystemBiosMajorVersion
-		$BiosMinor = (Get-CimInstance -ClassName Win32_BIOS).SystemBiosMinorVersion
-		# create a dot separated version
-		$BiosVersion = "$($BiosMajor).$($BiosMinor)"
-		# check if we have the correct bios version installed
-		if ($BiosVersion -eq $LenovoModel21H2BiosTargetVersion) {
-			Write-Host "Lenovo BIOS $($BiosVersion) already installed" -ForegroundColor DarkGreen
-			# remove the last three bios commands from the array that copy, install, and delete
-			$WorkArray = $WorkArray[0..($WorkArray.Length - 4)]
-		}
-	}	
-}
-else {
+# only do this for an ath computer
+if ($IsATHybrid -eq $true) {
 	Write-Host ".--------------------------------------------------------." -ForegroundColor Magenta
 	Write-Host "| Skipping driver and software installs for ATH Computer |" -ForegroundColor Magenta
 	Write-Host "'--------------------------------------------------------'" -ForegroundColor Magenta

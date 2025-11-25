@@ -45,9 +45,6 @@
   "LenovoBiosToolPath": "Tools\\BIOS\\Lenovo\\ThinkBiosConfig.hta",
   "LenovoDesktopBiosPath": "Tools\\BIOS\\Lenovo\\Configs\\LenovoDesktopBiosConfig.ini",
   "LenovoLaptopBiosPath": "Tools\\BIOS\\Lenovo\\Configs\\LenovoLaptopBiosConfig.ini",
-  "LenovoModel21H2": "21H2S5AJ00",
-  "LenovoModel21H2JsonFileName": "Lenovo21H2-21H2S5AJ00-installs.json",
-  "LenovoModel21H2BiosTargetVersion": "1.28",
   "DesktopOU": "OU=Workstations,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov",
   "LaptopOU": "OU=Laptops,OU=Prescott (VHAPRE),OU=Prescott,OU=Pacific (PA),OU=Districts,OU=Resources,DC=va,DC=gov"
 }
