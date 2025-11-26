@@ -2,27 +2,27 @@
   "Banner": [
     {
       "Text": " _____                         _   _      ____ _____ _______ ",
-      "Color": "Red"
+      "ColorName": "Red"
     },
     {
       "Text": "|  __ \\                       | | | |    / __ \\_   _|__   __|",
-      "Color": "Red"
+      "ColorName": "Red"
     },
     {
       "Text": "| |__) | __ ___  ___  ___ ___ | |_| |_  | |  | || |    | |   ",
-      "Color": "White"
+      "ColorName": "White"
     },
     {
       "Text": "|  ___/ '__/ _ \\/ __|/ __/ _ \\| __| __| | |  | || |    | |   ",
-      "Color": "White"
+      "ColorName": "White"
     },
     {
       "Text": "| |   | | |  __/\\__ \\ (_| (_) | |_| |_  | |__| || |_   | |   ",
-      "Color": "Blue"
+      "ColorName": "Blue"
     },
     {
       "Text": "|_|   |_|  \\___||___/\\___\\___/ \\__|\\__|  \\____/_____|  |_|   ",
-      "Color": "Blue"
+      "ColorName": "Blue"
     }
   ],
   "MapDriveLetter": "V",

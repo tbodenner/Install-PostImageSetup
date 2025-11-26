@@ -1169,7 +1169,7 @@ function Write-Banner {
 	)
 	# keys
 	$TextKey = "Text"
-	$ColorKey = "Color"
+	$ColorKey = "ColorName"
 
 	# loop through our array
 	foreach ($Item in $InputArray) {
