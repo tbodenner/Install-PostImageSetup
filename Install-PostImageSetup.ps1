@@ -759,6 +759,9 @@ function Test-IsStagingOU {
 }
 
 function Move-ComputerWithLdap {
+	param (
+		[Parameter(Mandatory=$true)][string]$ComputerName
+	)
 	# get our computer's distinguished name
 	$ComputerDN = Get-ComputerDistinguishedName($ComputerName)
 	# check if we found our computer
@@ -1321,7 +1324,7 @@ else {
 Write-Host "Getting computer information..." -ForegroundColor DarkGray
 
 # get computer name
-$ComputerName = $env:ComputerName
+$EnvComputerName = $env:ComputerName
 # get computer type: 1 = desktop, 2 = laptop, 3 = workstation
 $ComputerType = (Get-CimInstance -ClassName Win32_ComputerSystem -Property PCSystemType).PCSystemType
 # workstations will be considered the same as desktops
@@ -1469,7 +1472,7 @@ if ((Test-Path -Path "$($MapDriveLetter):\") -eq $false) {
 $IsATHybrid = $false
 
 # check if this computer is an AT Hybrid computer
-if ($ComputerName -like '*-SPATH*') { $IsATHybrid = $true }
+if ($EnvComputerName -like '*-SPATH*') { $IsATHybrid = $true }
 
 # only do this for a non-ath computer
 if ($IsATHybrid -eq $false) {
@@ -1482,7 +1485,7 @@ $UpdateTag = $false
 
 # get our asset tag number from our computer name
 Update-Progress -Status "Getting BIOS Asset Tag" -Echo $true
-$AssetNumber = Get-AssetTag -Name $ComputerName
+$AssetNumber = Get-AssetTag -Name $EnvComputerName
 # write our asset number
 Write-Host "EE: $($AssetNumber)" -ForegroundColor White
 
@@ -1544,7 +1547,7 @@ else {
 # check if this computer is still in the staging group in active directory
 Update-Progress -Status "Checking Computer's OU" -Echo $true
 # try to move the computer in AD
-Move-ComputerWithLdap($ComputerName)
+Move-ComputerWithLdap($EnvComputerName)
 
 # only do this for an ath computer
 if ($IsATHybrid -eq $true) {
