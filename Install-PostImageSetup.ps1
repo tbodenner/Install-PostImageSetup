@@ -18,9 +18,9 @@ $ScriptName = 'Install-PostImageSetup'
 # ------------------------------------------------------- #
 <#
 	1.0.0:
-		Initial version.
+		Initial version
 	1.0.1:
-		Added checking for a desktop or laptop.
+		Added checking for a desktop or laptop
 		Updated driver lists
 	1.0.2:
 		Added Micro Focus 2FA DLL
@@ -97,14 +97,16 @@ $ScriptName = 'Install-PostImageSetup'
 	1.3.2:
 		Updated getting asset number from device name to find 5 or 6 digits
 	1.3.3:
-		Some desktops are workstations in the CIM data. Updated script to treat workstations as desktops.
+		Some desktops are workstations in the CIM data
+		Updated script to treat workstations as desktops
 	1.3.4:
-		Updated json config names to make them more readable.
+		Updated json config names to make them more readable
 	1.3.5:
-		Updated AD searcher to set va.gov as entry point.
+		Updated AD searcher to set va.gov as entry point
 	1.3.6:
-		Updated names in install config.
-		Removed custom installs for Lenovo 21H2 laptop.
+		Updated names in install config
+		Removed custom installs for Lenovo 21H2 laptop
+		Updated staging OU move check to reduce false negatives
 #>
 #endregion CHANGE LOG
 
@@ -799,12 +801,26 @@ function Move-ComputerWithLdap {
 			$TargetEntry = [ADSI]"LDAP://$($TargetOU)"
 			# move the computer to the target OU
 			$ComputerEntry.MoveTo($TargetEntry.Path)
-			# wait a short time for the move
-			Start-Sleep -Seconds 2
-			# get our computer's distinguished name, again
-			$ComputerDN = Get-ComputerDistinguishedName($ComputerName)
-			# verify if the computer was moved
-			if ((Test-IsStagingOU($ComputerDN)) -eq $true) {
+			# number of times to check for a completed move
+			$MaxMoveCheckCount = 10
+			# current check count
+			$CheckCount = 0
+			# track if our computer has been moved
+			$IsComputerStillInStaging = $true
+			# check for a completed move
+			while (($CheckCount -lt $MaxMoveCheckCount) -and ($IsComputerStillInStaging -eq $true))
+			{
+				# wait a short time for the move
+				Start-Sleep -Seconds 1
+				# get our computer's distinguished name, again
+				$ComputerDN = Get-ComputerDistinguishedName($ComputerName)
+				# check if still in the staging OU
+				$IsComputerStillInStaging = Test-IsStagingOU($ComputerDN)
+				# update our count
+				$CheckCount += 1
+			}
+			# check if the computer was moved
+			if ($IsComputerStillInStaging -eq $true) {
 				# computer was not moved and is still in staging
 				Write-Host "Failed to move computer in Active Directory" -ForegroundColor Red
 			}
