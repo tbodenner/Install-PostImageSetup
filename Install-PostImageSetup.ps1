@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.6'
+$Version = '1.3.7'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -107,6 +107,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Updated names in install config
 		Removed custom installs for Lenovo 21H2 laptop
 		Updated staging OU move check to reduce false negatives
+	1.3.7:
+		Changed how a computer is checked in AD to account for replication time
 #>
 #endregion CHANGE LOG
 
@@ -760,40 +762,50 @@ function Test-IsStagingOU {
 	}
 }
 
+function Get-TargetOU {
+	param (
+		[Parameter(Mandatory=$true)][int]$ComputerType
+	)
+	# get our OU based on our computer type
+	switch ($ComputerType) {
+		1 {
+			# set our OU to the va.gov desktop OU
+			$DesktopOU
+		}
+		2 {
+			# set our OU to the va.gov laptop OU
+			$LaptopOU
+		}
+		default {
+			# if we can't determine the computer type, we can't set the target OU, so return null
+			$null
+		}
+	}
+}
+
 function Move-ComputerWithLdap {
 	param (
-		[Parameter(Mandatory=$true)][string]$ComputerName
+		[Parameter(Mandatory=$true)][string]$ComputerName,
+		[Parameter(Mandatory=$true)][int]$ComputerType
 	)
 	# get our computer's distinguished name
 	$ComputerDN = Get-ComputerDistinguishedName($ComputerName)
 	# check if we found our computer
-	if ($null -eq $ComputerDN) {
+	if (($null -eq $ComputerDN) -or ($ComputerDN -eq "")) {
 		Write-Host "Unable to find computer in AD" -ForegroundColor Red
 	}
 	else {
 		# check if the computer is in the staging group
 		if ((Test-IsStagingOU($ComputerDN)) -eq $true) {
-			# still in staging
-			Update-Progress -Status "Attempting to move computer in Active Directory" -Echo $true
 			# get our target OU
-			$TargetOU = $null
-			# get our OU based on our computer type
-			switch ($ComputerType) {
-				1 {
-					# set our OU to the va.gov desktop OU
-					$TargetOU = $DesktopOU
-				}
-				2 {
-					# set our OU to the va.gov laptop OU
-					$TargetOU = $LaptopOU
-				}
-				default {
-					# if we can't determine the computer type, we can't set the target OU, so return
-					Write-Host ".------------------------------------------------------------------." -ForegroundColor Red
-					Write-Host "| Error: Unable to determine computer type. Computer was NOT moved |" -ForegroundColor Red
-					Write-Host "'------------------------------------------------------------------'" -ForegroundColor Red
-					return
-				}
+			$TargetOU = Get-TargetOU -ComputerType $ComputerType
+			# check if we got a target ou
+			if ($null -eq $TargetOU) {
+				# if we can't determine the computer type, we can't set the target OU, so return
+				Write-Host ".------------------------------------------------------------------." -ForegroundColor Red
+				Write-Host "| Error: Unable to determine computer type. Computer was NOT moved |" -ForegroundColor Red
+				Write-Host "'------------------------------------------------------------------'" -ForegroundColor Red
+				return
 			}
 			# get the computer entry object from the distinguished name
 			$ComputerEntry = [ADSI]"LDAP://$($ComputerDN)"
@@ -801,37 +813,60 @@ function Move-ComputerWithLdap {
 			$TargetEntry = [ADSI]"LDAP://$($TargetOU)"
 			# move the computer to the target OU
 			$ComputerEntry.MoveTo($TargetEntry.Path)
-			# number of times to check for a completed move
-			$MaxMoveCheckCount = 10
-			# current check count
-			$CheckCount = 0
-			# track if our computer has been moved
-			$IsComputerStillInStaging = $true
-			# check for a completed move
-			while (($CheckCount -lt $MaxMoveCheckCount) -and ($IsComputerStillInStaging -eq $true))
-			{
-				# wait a short time for the move
-				Start-Sleep -Seconds 1
-				# get our computer's distinguished name, again
-				$ComputerDN = Get-ComputerDistinguishedName($ComputerName)
-				# check if still in the staging OU
-				$IsComputerStillInStaging = Test-IsStagingOU($ComputerDN)
-				# update our count
-				$CheckCount += 1
+		}
+	}
+}
+
+function Test-ComputerMovedInAd {
+	param (
+		[Parameter(Mandatory=$true)][string]$ComputerName,
+		[Parameter(Mandatory=$true)][string]$TargetOU
+	)
+	# check if we have a computer type
+	if ($null -eq $TargetOU) {
+		# computer was not moved and is still in staging
+		Write-Host "Failed to move computer in Active Directory" -ForegroundColor Red
+	}
+	else {
+		# number of times to check for a completed move
+		$MaxMoveCheckCount = 30
+		# current check count
+		$CheckCount = 0
+		# number of seconds to wait before each loop iteration
+		$SleepSeconds = 30
+		# max wait time in minutes
+		$MaxWaitMinutes = [Math]::Round(($MaxMoveCheckCount * $SleepSeconds) / 60)
+		# check if the computer was moved in ad
+		Update-Progress -Status "Checking if computer was moved in Active Directory" -Echo $true -Color Yellow
+		# track if our computer has been moved
+		$IsComputerStillInStaging = $true
+		# check for a completed move
+		while (($CheckCount -lt $MaxMoveCheckCount) -and ($IsComputerStillInStaging -eq $true))
+		{
+			# only write this message on our second try
+			if ($CheckCount -eq 1) {
+				Write-Host "Maximum wait time is $($MaxWaitMinutes) minutes"
 			}
-			# check if the computer was moved
+			# get our computer's distinguished name, again
+			$ComputerDN = Get-ComputerDistinguishedName($ComputerName)
+			# check if still in the staging OU
+			$IsComputerStillInStaging = Test-IsStagingOU($ComputerDN)
+			# update our count
+			$CheckCount += 1
+			# only wait if the computer is still in staging
 			if ($IsComputerStillInStaging -eq $true) {
-				# computer was not moved and is still in staging
-				Write-Host "Failed to move computer in Active Directory" -ForegroundColor Red
-			}
-			else {
-				# computer was moved out of the staging OU
-				Write-Host "Moved computer '$($ComputerName)' to '$($TargetOU)'." -ForegroundColor Green
+				# wait a before checking again
+				Start-Sleep -Seconds $SleepSeconds
 			}
 		}
+		# check if the computer was moved
+		if ($IsComputerStillInStaging -eq $true) {
+			# computer was not moved and is still in staging
+			Write-Host "Failed to move computer in Active Directory" -ForegroundColor Red
+		}
 		else {
-			# not in the staging OU
-			Write-Host "Computer has already been moved out of the staging OU." -ForegroundColor Green
+			# computer was moved out of the staging OU
+			Write-Host "Moved computer '$($ComputerName)' to '$($TargetOU)'." -ForegroundColor Green
 		}
 	}
 }
@@ -1560,10 +1595,9 @@ else {
 	Write-Host "BIOS Settings NOT Updated" -ForegroundColor Red
 }
 
-# check if this computer is still in the staging group in active directory
-Update-Progress -Status "Checking Computer's OU" -Echo $true
 # try to move the computer in AD
-Move-ComputerWithLdap($EnvComputerName)
+Update-Progress -Status "Moving computer in Active Directory" -Echo $true -Color Yellow
+Move-ComputerWithLdap -ComputerName $EnvComputerName -ComputerType $ComputerType
 
 # only do this for an ath computer
 if ($IsATHybrid -eq $true) {
@@ -1600,7 +1634,9 @@ $WorkArray.ForEach({
 	}
 	if ($SkipWorkItem -eq $false) {
 		# start the work item
-		Install-WorkItem -WorkObject $_; Start-Sleep -Milliseconds 500
+		Install-WorkItem -WorkObject $_
+		# small sleep time
+		#Start-Sleep -Milliseconds 50
 	}
 })
 
@@ -1622,7 +1658,7 @@ if (($null -eq $CurrentLastLoggedInUserValue) -or ($CurrentLastLoggedInUserValue
 # run gpupdate
 Update-Progress -Status "Running GP Update" -Echo $true
 & $Executables['CmdExe'] /c "ECHO N | $($Executables['GpupdateExe']) /force /wait:180" | Out-Null
-Update-Progress -Status "GP Update Finished" -Echo $true
+Update-Progress -Status "GP Update Finished" -Echo $true -Color Green
 
 # anyconnect software name
 $AnyConnect = 'Cisco Secure Client - AnyConnect VPN'
@@ -1640,6 +1676,9 @@ Set-Location $SystemFolder
 # remove our temp drive
 Update-Progress -Status "Removing Mapped Drive" -Echo $true
 Remove-PSDrive -Name $MapDriveLetter -Force | Out-Null
+
+# check if the computer was moved in ad
+Test-ComputerMovedInAd -ComputerName $EnvComputerName -TargetOU (Get-TargetOU -ComputerType $ComputerType)
 
 # installs done
 Update-Progress -Status "Done" -Echo $true
