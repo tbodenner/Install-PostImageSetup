@@ -41,16 +41,6 @@
   },
   {
     "Type": "Install",
-    "Name": "BigFix Remote Control - Target",
-    "FilePath": "Installers\\BigFix Target Installer\\trc_target_setup.exe",
-    "Arguments": "/S /v/qn",
-    "Message": "BigFix RC Target (No GUI)",
-    "IsLaptop": true,
-    "IsDesktop": true,
-    "SkipCheck": false
-  },
-  {
-    "Type": "Install",
     "Name": "LynxClient",
     "FilePath": "Installers\\Lynx\\LynxClient_v10.4.25.0.msi",
     "Arguments": "/passive HOSTNAME=vhapreapplynx PROFILE=PanicButton",

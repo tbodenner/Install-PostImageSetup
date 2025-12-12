@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.7'
+$Version = '1.3.8'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -109,6 +109,11 @@ $ScriptName = 'Install-PostImageSetup'
 		Updated staging OU move check to reduce false negatives
 	1.3.7:
 		Changed how a computer is checked in AD to account for replication time
+	1.3.8:
+		Changed baseline.json config to a single array
+		Removed redundant 'Cisco Secure Client' check
+		Improved speed of baseline checking
+		Moved gpupdate to a background job
 #>
 #endregion CHANGE LOG
 
@@ -239,7 +244,7 @@ function Get-BaselineItemsFromJson {
 
 	# try to read our data from the json file
 	try {
-		Get-Content $JsonFilePath | ConvertFrom-Json -AsHashtable
+		Get-Content $JsonFilePath | ConvertFrom-Json
 	}
 	catch {
 		# if we are unable to read the file, write an error message and return nothing
@@ -504,24 +509,33 @@ function Update-Progress {
 function Test-IsInstalled {
 	# parameters
 	param (
-		[Parameter(Mandatory=$true)][string]$Name
+		[Parameter(Mandatory=$true)][string]$Name,
+		[Parameter(Mandatory=$true)][object[]]$SoftwareArray
 	)
-	# x86
-	$Path32 = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
-	# amd64
-	$Path64 = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
-	# get all installed software
-	$Software = Get-ItemProperty -Path $Path32, $Path64
 	# create our compare string
 	$CompareName = "$($Name)*"
-	# look for our software in our software list
-	$Version = ($Software | Where-Object { $_.DisplayName -like $CompareName }).DisplayVersion
-	# if the software is not found then IsInstalled is false
+	# look for our software in our software array
+	$Version = ($SoftwareArray | Where-Object { $_.DisplayName -like $CompareName }).DisplayVersion
+	# if the software is not found
 	if ($null -eq $Version) {
-		return $false
+		# return false
+		$false
 	}
-	# return true for all other cases
-	return $true
+	else {
+		# otherwise, return true
+		$true
+	}
+}
+
+# get all our installed software
+function Get-InstalledSoftware {
+	# parameters
+	param (
+		[Parameter(Mandatory=$true)][string]$Path32,
+		[Parameter(Mandatory=$true)][string]$Path64
+	)
+	# return the installed software
+	Get-ItemProperty -Path $Path32, $Path64
 }
 
 # check by name if our driver is found by pnputil /enum-drivers
@@ -618,11 +632,13 @@ function Install-WorkItem {
 				return
 			}
 			# check if the software is installed
-			$IsSoftwareInstalled = Test-IsInstalled -Name $Installer.Name
+			$IsSoftwareInstalled = Test-IsInstalled -Name $Installer.Name -SoftwareArray $Global:InstalledSoftware
 			# check if the driver is installed
 			$IsDriverInstalled = Test-IsSignedDriverInstalled -Drivers $SignedDrivers -Name $Installer.Name
 			# install our item or skip it
 			if (($IsSoftwareInstalled -eq $false) -and ($IsDriverInstalled -eq $false)) {
+				# stop this file from being asked to run
+				Unblock-File -Path $Installer.File
 				# is this an exe or a msi file
 				switch (Split-Path -Path $Installer.File -Extension) {
 					'.exe' {
@@ -641,8 +657,10 @@ function Install-WorkItem {
 				}
 				# only check if the install worked if skip check if false
 				if ($Installer.SkipCheck -eq $false) {
+					# update our software list
+					$Global:InstalledSoftware = Get-InstalledSoftware -Path32 $Global:RegPath32 -Path64 $Global:RegPath64
 					# check if the software is installed
-					if ((Test-IsInstalled -Name $Installer.Name) -eq $true) {
+					if ((Test-IsInstalled -Name $Installer.Name -SoftwareArray $Global:InstalledSoftware) -eq $true) {
 						# install was good
 						Write-Host "-- '$($Installer.Name)' Installed" -ForegroundColor Green
 					}
@@ -770,11 +788,11 @@ function Get-TargetOU {
 	switch ($ComputerType) {
 		1 {
 			# set our OU to the va.gov desktop OU
-			$DesktopOU
+			$Global:DesktopOU
 		}
 		2 {
 			# set our OU to the va.gov laptop OU
-			$LaptopOU
+			$Global:LaptopOU
 		}
 		default {
 			# if we can't determine the computer type, we can't set the target OU, so return null
@@ -811,6 +829,7 @@ function Move-ComputerWithLdap {
 			$ComputerEntry = [ADSI]"LDAP://$($ComputerDN)"
 			# get our OU entry object
 			$TargetEntry = [ADSI]"LDAP://$($TargetOU)"
+			Write-Host "[DEBUG] TargetEntry.Path: $($TargetEntry.Path)" -ForegroundColor Magenta
 			# move the computer to the target OU
 			$ComputerEntry.MoveTo($TargetEntry.Path)
 		}
@@ -1148,8 +1167,9 @@ function Test-ConfigValueNull {
 # check if all our baseline applications are installed
 function Test-Baseline {
 	param (
-		[Parameter(Mandatory=$true)][hashtable]$BaselineHashtable,
-		[Parameter(Mandatory=$true)][int]$ComputerType
+		[Parameter(Mandatory=$true)][string[]]$BaselineArray,
+		[Parameter(Mandatory=$true)][int]$ComputerType,
+		[Parameter(Mandatory=$true)][object[]]$SoftwareArray
 	)
 	# update our progress
 	Update-Progress -Status "Checking Baseline" -Echo $true -Color Yellow
@@ -1164,23 +1184,20 @@ function Test-Baseline {
 	}
 	# keep track of failures
 	$SoftwareNotFoundCount = 0
-	# loop through the hashtable's keys
-	foreach ($Key in $BaselineHashtable.Keys) {
-		# loop through the hashtable's value
-		foreach ($Value in $BaselineHashtable[$Key]) {
-			# check if each software package is installed
-			$Result = Test-IsInstalled -Name $Value
-			# add our result to the software name line
-			if ($Result -eq $true) {
-				# software found
-				Write-Host "  Installed: $($Value)" -ForegroundColor Green
-			}
-			else {
-				# software not found
-				Write-Host "  Not Found: $($Value)" -ForegroundColor Red
-				# update our count
-				$SoftwareNotFoundCount += 1
-			}
+	# loop through the array's values
+	foreach ($Value in $BaselineArray) {
+		# check if each software package is installed
+		$Result = Test-IsInstalled -Name $Value -SoftwareArray $SoftwareArray
+		# add our result to the software name line
+		if ($Result -eq $true) {
+			# software found
+			Write-Host "  Installed: $($Value)" -ForegroundColor Green
+		}
+		else {
+			# software not found
+			Write-Host "  Not Found: $($Value)" -ForegroundColor Red
+			# update our count
+			$SoftwareNotFoundCount += 1
 		}
 	}
 
@@ -1268,8 +1285,11 @@ function Write-Banner {
 #                         CONFIG                          #
 # ------------------------------------------------------- #
 
+# stop our files from being stopped with confirmation to run prompts
+$env:SEE_MASK_NOZONECHECKS = 1
+
 # begin reading config and getting base system information
-Write-Host "Initializing, please wait..." -ForegroundColor DarkGray
+Write-Host "Reading config files ........... " -ForegroundColor DarkGray -NoNewline
 
 # our json config file
 $JsonConfigFileName = Join-Path -Path $PSScriptRoot -ChildPath 'config.json'
@@ -1342,7 +1362,7 @@ $RebootTimeoutString = Test-ConfigValueNull -Hashtable $JsonConfigHashtable -Key
 $RebootTimeout = Test-ParseInt -Name "RebootTimeout" -InputString $RebootTimeoutString
 
 # config was loaded from the json file
-Write-Host "Config loaded." -ForegroundColor DarkGray
+Write-Host "Done" -ForegroundColor DarkGray
 #endregion CONFIG
 
 #region PROPERTIES
@@ -1362,7 +1382,7 @@ $BaselineFilePath = Join-Path -Path $PSScriptRoot -ChildPath $BaselineFileName
 # check if our baseline json file exists
 if ((Test-Path -Path $BaselineFilePath) -eq $true) {
 	# get our data from our json file
-	$BaselineJsonData = [hashtable](Get-BaselineItemsFromJson -JsonFilePath $BaselineFilePath)
+	$BaselineJsonData = Get-BaselineItemsFromJson -JsonFilePath $BaselineFilePath
 }
 else {
 	# write an error
@@ -1372,7 +1392,7 @@ else {
 }
 
 # read cim data
-Write-Host "Getting computer information..." -ForegroundColor DarkGray
+Write-Host "Getting computer information ... " -ForegroundColor DarkGray -NoNewline
 
 # get computer name
 $EnvComputerName = $env:ComputerName
@@ -1394,6 +1414,20 @@ if ($ComputerManufacturer.ToUpper() -eq "DELL INC.") {
 $ComputerModel = (Get-CimInstance -ClassName Win32_ComputerSystem).Model
 # get computer asset tag
 $ComputerAssetTag = (Get-CimInstance -ClassName Win32_SystemEnclosure).SMBIOSAssetTag
+Write-Host "Done" -ForegroundColor DarkGray
+
+# get installed software
+Write-Host "Getting installed software ..... " -ForegroundColor DarkGray -NoNewline
+
+# our registry location for the uninstall strings
+# x86
+$RegPath32 = "HKLM:\SOFTWARE\Wow6432Node\Microsoft\Windows\CurrentVersion\Uninstall\*"
+# amd64
+$RegPath64 = "HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\*"
+
+# list of all our uninstall strings
+$InstalledSoftware = Get-InstalledSoftware -Path32 $RegPath32 -Path64 $RegPath64
+Write-Host "Done" -ForegroundColor DarkGray
 
 # progress message
 $ProgressActivity = "Post-Image Setup"
@@ -1401,13 +1435,6 @@ $ProgressActivity = "Post-Image Setup"
 $ProgressCount = 0
 # total progress count
 $ProgressTotal = 0
-
-# pause before clearing the screen
-Start-Sleep -Seconds 2
-
-# clear the screen
-Clear-Host
-#endregion PROPERTIES
 
 #region MAIN SCRIPT
 # ------------------------------------------------------- #
@@ -1442,7 +1469,7 @@ Start-Transcript -Path $TranscriptFile -NoClobber | Out-Null
 Write-Host "$($ScriptName) v$($Version)`n" -ForegroundColor DarkGray
 
 # check our baseline software
-$BaselineResult = Test-Baseline -BaselineHashtable $BaselineJsonData -ComputerType $ComputerType
+$BaselineResult = Test-Baseline -BaselineArray $BaselineJsonData -ComputerType $ComputerType -SoftwareArray $InstalledSoftware
 # stop the script if our baseline check has failed
 if ($BaselineResult -eq $false) {
 	# write an error
@@ -1596,7 +1623,7 @@ else {
 }
 
 # try to move the computer in AD
-Update-Progress -Status "Moving computer in Active Directory" -Echo $true -Color Yellow
+Update-Progress -Status "Moving computer in Active Directory" -Echo $true
 Move-ComputerWithLdap -ComputerName $EnvComputerName -ComputerType $ComputerType
 
 # only do this for an ath computer
@@ -1604,6 +1631,24 @@ if ($IsATHybrid -eq $true) {
 	Write-Host ".--------------------------------------------------------." -ForegroundColor Magenta
 	Write-Host "| Skipping driver and software installs for ATH Computer |" -ForegroundColor Magenta
 	Write-Host "'--------------------------------------------------------'" -ForegroundColor Magenta
+}
+
+# name of the gpupdate job
+$GpupdateJobName = "gpupdate_job"
+# gpupdate script block
+$GpupdateScriptBlock = {
+	Start-Process -FilePath $args[0] -ArgumentList $args[1] -NoNewWindow -Wait
+}
+# start the gpupdate job and ignore output from the start-job command
+Start-Job -Name $GpupdateJobName -ScriptBlock $GpupdateScriptBlock -ArgumentList $Executables['GpupdateExe'],"/force /wait:300" | Out-Null
+# check if our job started
+if ((Get-Job -Name $GpupdateJobName).State -eq 'Running') {
+	# write our running status
+	Write-Host "Started GP update job" -ForegroundColor Green
+}
+else {
+	# write our failed status
+	Write-Host "Failed to start GP update job" -ForegroundColor Red
 }
 
 # all work to be done will go into this array
@@ -1635,8 +1680,6 @@ $WorkArray.ForEach({
 	if ($SkipWorkItem -eq $false) {
 		# start the work item
 		Install-WorkItem -WorkObject $_
-		# small sleep time
-		#Start-Sleep -Milliseconds 50
 	}
 })
 
@@ -1655,20 +1698,17 @@ if (($null -eq $CurrentLastLoggedInUserValue) -or ($CurrentLastLoggedInUserValue
 					 -Value 1 -Force -ErrorAction SilentlyContinue
 }
 
-# run gpupdate
-Update-Progress -Status "Running GP Update" -Echo $true
-& $Executables['CmdExe'] /c "ECHO N | $($Executables['GpupdateExe']) /force /wait:180" | Out-Null
-Update-Progress -Status "GP Update Finished" -Echo $true -Color Green
-
-# anyconnect software name
-$AnyConnect = 'Cisco Secure Client - AnyConnect VPN'
-# check if this is a laptop and if anyconnect is installed
-if (($ComputerType -eq 2) -and ((Test-IsInstalled -Name $AnyConnect) -eq $false)) {
-	# if this is a laptop and the software is not found, alert the user
-	Write-Host "************************************************************************************" -ForegroundColor Red
-	Write-Host "* Warning, '$($AnyConnect)' NOT installed on this laptop! *" -ForegroundColor Red
-	Write-Host "************************************************************************************`n`n" -ForegroundColor Red
+# check if our gpupdate job is still running
+if ((Get-Job -Name $GpupdateJobName).State -eq 'Running') {
+	# if running, wait for it to finish
+	Update-Progress -Status "Waiting for GP update job to finish" -Echo $true
+	while ((Get-Job -Name $GpupdateJobName).State -eq 'Running') {
+		# wait one second between checks
+		Start-Sleep -Seconds 1
+	}
 }
+# gpupdate was already finished, or has finished
+Update-Progress -Status "GP Update Finished" -Echo $true -Color Green
 
 # change out of our mapped drive
 Set-Location $SystemFolder
