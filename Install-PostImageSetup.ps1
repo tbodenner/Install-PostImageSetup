@@ -114,6 +114,7 @@ $ScriptName = 'Install-PostImageSetup'
 		Removed redundant 'Cisco Secure Client' check
 		Improved speed of baseline checking
 		Moved gpupdate to a background job
+		Possible fix for error when computer is already moving in AD
 #>
 #endregion CHANGE LOG
 
@@ -829,9 +830,17 @@ function Move-ComputerWithLdap {
 			$ComputerEntry = [ADSI]"LDAP://$($ComputerDN)"
 			# get our OU entry object
 			$TargetEntry = [ADSI]"LDAP://$($TargetOU)"
-			Write-Host "[DEBUG] TargetEntry.Path: $($TargetEntry.Path)" -ForegroundColor Magenta
-			# move the computer to the target OU
-			$ComputerEntry.MoveTo($TargetEntry.Path)
+			#Write-Host "[DEBUG] TargetEntry.Path: $($TargetEntry.Path)" -ForegroundColor Magenta
+			try {
+				# move the computer to the target OU
+				$ComputerEntry.MoveTo($TargetEntry.Path)
+			}
+			catch [System.Management.Automation.ExtendedTypeSystemException] {
+				# exception:
+				# MoveTo: There is no such object on the server.
+				# path can't be found because the move has already started
+				Write-Host "Computer already set to move" -ForegroundColor Yellow
+			}
 		}
 	}
 }

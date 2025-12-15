@@ -80,16 +80,6 @@
     "SkipCheck": false
   },
   {
-    "Type": "Install",
-    "Name": "Micro Focus Reflection DLL for 2FA",
-    "FilePath": "Installers\\VA Micro Focus Reflection DLL for 2FA\\MicroFocusReflectionDLL.msi",
-    "Arguments": "ALLUSERS=1 REBOOT=R /passive",
-    "Message": "VA Micro Focus Reflection DLL for 2FA",
-    "IsLaptop": true,
-    "IsDesktop": true,
-    "SkipCheck": false
-  },
-  {
     "Type": "CopyFile",
     "FilePath": "Files\\StreemPrint\\global_properties.json",
     "Destination": "C:\\Program Files (x86)\\Streem Print\\props",
