@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.8'
+$Version = '1.3.9'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -115,6 +115,8 @@ $ScriptName = 'Install-PostImageSetup'
 		Improved speed of baseline checking
 		Moved gpupdate to a background job
 		Possible fix for error when computer is already moving in AD
+	1.3.9:
+		Added a maximum time to wait for the gpupdate loop to complete
 #>
 #endregion CHANGE LOG
 
@@ -1707,6 +1709,8 @@ if (($null -eq $CurrentLastLoggedInUserValue) -or ($CurrentLastLoggedInUserValue
 					 -Value 1 -Force -ErrorAction SilentlyContinue
 }
 
+# get a time 5 minutes from now
+$GpupdateStopTime = (Get-Date).AddMinutes(5)
 # check if our gpupdate job is still running
 if ((Get-Job -Name $GpupdateJobName).State -eq 'Running') {
 	# if running, wait for it to finish
@@ -1714,6 +1718,8 @@ if ((Get-Job -Name $GpupdateJobName).State -eq 'Running') {
 	while ((Get-Job -Name $GpupdateJobName).State -eq 'Running') {
 		# wait one second between checks
 		Start-Sleep -Seconds 1
+		# check if we are past our stop time, if we are, stop this loop
+		if ((Get-Date) -gt $GpupdateStopTime) { break }
 	}
 }
 # gpupdate was already finished, or has finished
