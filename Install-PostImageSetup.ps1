@@ -1,7 +1,7 @@
 #Requires -RunAsAdministrator
 
 # script version and name
-$Version = '1.3.9'
+$Version = '1.4.0'
 $ScriptName = 'Install-PostImageSetup'
 
 # ------------------------------------------------------- #
@@ -117,6 +117,9 @@ $ScriptName = 'Install-PostImageSetup'
 		Possible fix for error when computer is already moving in AD
 	1.3.9:
 		Added a maximum time to wait for the gpupdate loop to complete
+	1.4.0:
+		Removed the code for setting two registry values
+		This was to try and stop a computer from downloading additional software for drivers, but it was not working
 #>
 #endregion CHANGE LOG
 
@@ -1092,23 +1095,6 @@ function Add-RegistryKey {
 	Set-ItemProperty -Path $Path -Name $KeyName -Value $Value -Type $KeyType | Out-Null
 }
 
-# add registry value to stop downloading manufacturers' apps for installed devices
-function Set-DisableAppsForDevices {
-	# the registry values
-	$RegPath = 'HKCU:\Software\Policies\Microsoft\Windows\DeviceInstall'
-	$RegKeyName = 'AllowOSManagedDriverInstallationToUI'
-	$RegKeyValue = 0
-	# add the key
-	Add-RegistryKey -Path $RegPath -KeyName $RegKeyName -Value $RegKeyValue -KeyType DWord
-
-	# the registry values
-	$RegPath = 'HKLM:\Software\Microsoft\Windows\CurrentVersion\Device Installer'
-	$RegKeyName = 'DisableCoInstallers'
-	$RegKeyValue = 1
-	# add the key
-	Add-RegistryKey -Path $RegPath -KeyName $RegKeyName -Value $RegKeyValue -KeyType DWord
-}
-
 # reboot the computer
 function Start-ComputerRestart {
 	param (
@@ -1562,12 +1548,6 @@ $IsATHybrid = $false
 
 # check if this computer is an AT Hybrid computer
 if ($EnvComputerName -like '*-SPATH*') { $IsATHybrid = $true }
-
-# only do this for a non-ath computer
-if ($IsATHybrid -eq $false) {
-	# add a registry value and set it's value
-	Set-DisableAppsForDevices
-}
 
 # boolean to determine if we will update our asset tag
 $UpdateTag = $false
