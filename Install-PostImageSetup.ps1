@@ -120,6 +120,7 @@ $ScriptName = 'Install-PostImageSetup'
 	1.4.0:
 		Removed the code for setting two registry values
 		This was to try and stop a computer from downloading additional software for drivers, but it was not working
+		Stop Unblock-File from showing warnings and errors during install attempt
 #>
 #endregion CHANGE LOG
 
@@ -644,7 +645,7 @@ function Install-WorkItem {
 			# install our item or skip it
 			if (($IsSoftwareInstalled -eq $false) -and ($IsDriverInstalled -eq $false)) {
 				# stop this file from being asked to run
-				Unblock-File -Path $Installer.File
+				Unblock-File -Path $Installer.File -ErrorAction SilentlyContinue -WarningAction SilentlyContinue
 				# is this an exe or a msi file
 				switch (Split-Path -Path $Installer.File -Extension) {
 					'.exe' {
