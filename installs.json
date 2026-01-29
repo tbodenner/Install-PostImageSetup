@@ -11,6 +11,16 @@
   },
   {
     "Type": "Install",
+    "Name": "Xerox DPE",
+    "FilePath": "Installers\\Xerox Desktop Print Experience\\XeroxDPE_8.158.0.0_x64.msi",
+    "Arguments": "/passive /norestart",
+    "Message": "Xerox DPE",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
     "Name": "ECFax Messenger",
     "FilePath": "Installers\\ECFax Messenger\\ECFax-Messenger-1.5.1.37-Installer.msi",
     "Arguments": "ALLUSERS=1 /passive /norestart",
