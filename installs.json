@@ -11,10 +11,10 @@
   },
   {
     "Type": "Install",
-    "Name": "Xerox DPE",
+    "Name": "Xerox Desktop Print Experience",
     "FilePath": "Installers\\Xerox Desktop Print Experience\\XeroxDPE_8.158.0.0_x64.msi",
     "Arguments": "/passive /norestart",
-    "Message": "Xerox DPE",
+    "Message": "Xerox Desktop Print Experience",
     "IsLaptop": true,
     "IsDesktop": true,
     "SkipCheck": false
