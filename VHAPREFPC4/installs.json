@@ -1,0 +1,196 @@
+[
+  {
+    "Type": "Install",
+    "Name": "StreemPrint",
+    "FilePath": "Installers\\StreemPrint\\StreemPrint Setup 7.4.2.exe",
+    "Arguments": "/S",
+    "Message": "StreemPrint (No GUI)",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
+    "Name": "Xerox Desktop Print Experience",
+    "FilePath": "Installers\\Xerox Desktop Print Experience\\XeroxDPE_8.158.0.0_x64.msi",
+    "Arguments": "/passive /norestart",
+    "Message": "Xerox Desktop Print Experience",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
+    "Name": "ECFax Messenger",
+    "FilePath": "Installers\\ECFax Messenger\\ECFax-Messenger-1.5.1.37-Installer.msi",
+    "Arguments": "ALLUSERS=1 /passive /norestart",
+    "Message": "ECFax Messenger",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
+    "Name": "PS667",
+    "FilePath": "Installers\\Ambir PS667 Drivers\\PS667_v3.1.0_setup.exe",
+    "Arguments": "/S /v/qn",
+    "Message": "Ambir PS667 Driver (No GUI)",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
+    "Name": "DS687",
+    "FilePath": "Installers\\Ambir DS687 Drivers\\Ambir-DS687-v4.0.4.exe",
+    "Arguments": "/silent",
+    "Message": "Ambir DS687 Drivers (No GUI)",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
+    "Name": "LynxClient",
+    "FilePath": "Installers\\Lynx\\LynxClient_v10.4.25.0.msi",
+    "Arguments": "/passive HOSTNAME=vhapreapplynx PROFILE=PanicButton",
+    "Message": "Lynx",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
+    "Name": "DisplayLink Graphics",
+    "FilePath": "Installers\\DisplayLink Graphics Driver\\DisplayLink_Win10RS_11.7.msi",
+    "Arguments": "/passive",
+    "Message": "DisplayLink Drivers",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
+    "Name": "Universal Print Driver",
+    "FilePath": "Installers\\VA HP Universal Print Drivers\\PrintDriver.msi",
+    "Arguments": "ALLUSERS=1 REBOOT=R /passive",
+    "Message": "VA HP Universal Print Drivers",
+    "IsLaptop": true,
+    "IsDesktop": true,
+    "SkipCheck": false
+  },
+  {
+    "Type": "Install",
+    "Name": "HP USB Universal Dock G2 Drivers",
+    "FilePath": "Installers\\VA HP Dock Drivers\\HPUSBUniversalDockG2Drivers.msi",
+    "Arguments": "ALLUSERS=1 REBOOT=R /qn",
+    "Message": "VA HP USB Universal Dock G2 Drivers",
+    "IsLaptop": true,
+    "IsDesktop": false,
+    "SkipCheck": false
+  },
+  {
+    "Type": "CopyFile",
+    "FilePath": "Files\\StreemPrint\\global_properties.json",
+    "Destination": "C:\\Program Files (x86)\\Streem Print\\props",
+    "Message": "StreemPrint Config File",
+    "IsLaptop": true,
+    "IsDesktop": true
+  },
+  {
+    "Type": "CopyFile",
+    "FilePath": "Files\\Icons\\Printers.lnk",
+    "Destination": "Public\\Desktop",
+    "Message": "Printer Shortcut",
+    "IsLaptop": true,
+    "IsDesktop": true
+  },
+  {
+    "Type": "CopyFile",
+    "FilePath": "Files\\Icons\\gpupdate.lnk",
+    "Destination": "Public\\Desktop",
+    "Message": "gpupdate Shortcut",
+    "IsLaptop": true,
+    "IsDesktop": true
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "Message": "Changing Desktop Monitor Sleep Time",
+    "IsLaptop": false,
+    "IsDesktop": true
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "Message": "Changing Desktop Computer Sleep Time",
+    "IsLaptop": false,
+    "IsDesktop": true
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACTIVE SCHEME_BALANCED",
+    "Message": "Setting Power Scheme",
+    "IsLaptop": false,
+    "IsDesktop": true
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "Message": "Changing Laptop Monitor Sleep Time AC",
+    "IsLaptop": true,
+    "IsDesktop": false
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "Message": "Changing Laptop Computer Sleep Time AC",
+    "IsLaptop": true,
+    "IsDesktop": false
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_VIDEO VIDEOIDLE 1800",
+    "Message": "Changing Laptop Monitor Sleep Time DC",
+    "IsLaptop": true,
+    "IsDesktop": false
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_SLEEP STANDBYIDLE 0",
+    "Message": "Changing Laptop Computer Sleep Time DC",
+    "IsLaptop": true,
+    "IsDesktop": false
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
+    "Message": "Changing Laptop Power Settings AC",
+    "IsLaptop": true,
+    "IsDesktop": false
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETDCVALUEINDEX SCHEME_BALANCED SUB_BUTTONS LIDACTION 0",
+    "Message": "Changing Laptop Power Settings DC",
+    "IsLaptop": true,
+    "IsDesktop": false
+  },
+  {
+    "Type": "RunCommand",
+    "FilePath": "PowercfgExe",
+    "Arguments": "/SETACTIVE SCHEME_BALANCED",
+    "Message": "Setting Power Scheme",
+    "IsLaptop": true,
+    "IsDesktop": false
+  }
+]

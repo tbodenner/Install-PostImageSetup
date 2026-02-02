@@ -26,8 +26,8 @@
     }
   ],
   "MapDriveLetter": "V",
-  "MapDriveFolder": "\\\\VHAPREPRT25.VA.GOV\\PostImageSetup",
-  "InstallFolder": "ScriptFiles",
+  "MapDriveFolder": "\\\\VHAPREFPC4.V18.MED.VA.GOV\\E\\1.Desktop Icon",
+  "InstallFolder": "ScriptInstalls",
   "TempFolder": "C:\\Temp",
   "SystemFolder": "C:\\Windows\\System32",
   "JsonFileName": "installs.json",
