@@ -99,14 +99,6 @@
   },
   {
     "Type": "CopyFile",
-    "FilePath": "Files\\Icons\\Printers.lnk",
-    "Destination": "Public\\Desktop",
-    "Message": "Printer Shortcut",
-    "IsLaptop": true,
-    "IsDesktop": true
-  },
-  {
-    "Type": "CopyFile",
     "FilePath": "Files\\Icons\\gpupdate.lnk",
     "Destination": "Public\\Desktop",
     "Message": "gpupdate Shortcut",
